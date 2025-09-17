@@ -8,6 +8,7 @@ jobs:
   sync-docs:
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 1  # run one at a time to avoid git conflicts
       matrix:
         include:
           - repo: "pointfreeco/swift-composable-architecture"
