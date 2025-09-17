@@ -1,0 +1,74 @@
+# .github/workflows/sync-pointfree-docs.yml
+name: Sync Point-Free Documentation
+
+on:
+  workflow_dispatch: # manual trigger
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - repo: "pointfreeco/swift-composable-architecture"
+            paths: "Sources/ComposableArchitecture/Documentation.docc"
+            output: "composable-architecture-docs.md"
+          - repo: "pointfreeco/swift-navigation"
+            paths: "Sources/AppKitNavigation/Documentation.docc,Sources/SwiftNavigation/Documentation.docc,Sources/SwiftUINavigation/Documentation.docc,Sources/UIKitNavigation/Documentation.docc"
+            output: "swift-navigation-docs.md"
+          - repo: "pointfreeco/swift-dependencies"
+            paths: "Sources/Dependencies/Documentation.docc"
+            output: "swift-dependencies-docs.md"
+          - repo: "pointfreeco/swift-case-paths"
+            paths: "Sources/CasePaths/Documentation.docc,Sources/CasePathsCore/Documentation.docc"
+            output: "swift-case-paths-docs.md"
+
+    steps:
+      - name: Checkout docs repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone source repository
+        run: |
+          git clone https://github.com/${{ matrix.repo }}.git temp-repo
+
+      - name: Process documentation
+        run: |
+          echo "# ${{ matrix.repo }} Documentation" > ${{ matrix.output }}
+          echo "" >> ${{ matrix.output }}
+          echo "Auto-generated from https://github.com/${{ matrix.repo }}" >> ${{ matrix.output }}
+          echo "Generated on: $(date)" >> ${{ matrix.output }}
+          echo "" >> ${{ matrix.output }}
+          
+          IFS=',' read -ra PATHS <<< "${{ matrix.paths }}"
+          for path in "${PATHS[@]}"; do
+            path=$(echo "$path" | xargs) # trim whitespace
+            if [ -d "temp-repo/$path" ]; then
+              echo "## Documentation from $path" >> ${{ matrix.output }}
+              echo "" >> ${{ matrix.output }}
+              
+              find "temp-repo/$path" -name "*.md" -type f | sort | while read -r file; do
+                filename=$(basename "$file" .md)
+                echo "### $filename" >> ${{ matrix.output }}
+                echo "" >> ${{ matrix.output }}
+                cat "$file" >> ${{ matrix.output }}
+                echo "" >> ${{ matrix.output }}
+                echo "---" >> ${{ matrix.output }}
+                echo "" >> ${{ matrix.output }}
+              done
+            else
+              echo "⚠️  Path not found: $path" >> ${{ matrix.output }}
+            fi
+          done
+
+      - name: Cleanup temp repo
+        run: rm -rf temp-repo
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ${{ matrix.output }}
+          git commit -m "Update ${{ matrix.output }}" || exit 0
+          git push
