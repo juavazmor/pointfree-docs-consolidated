@@ -2,99 +2,100 @@
 name: Sync Point-Free Documentation
 
 on:
-  workflow_dispatch: # manual trigger
+    workflow_dispatch: # manual trigger
 
 jobs:
-  sync-docs:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout docs repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+    sync-docs:
+        runs-on: ubuntu-latest
 
-      - name: Process all repositories
-        run: |
-          # function to process a single repo
-          process_repo() {
-            local repo=$1
-            local paths=$2
-            local repo_name=$(echo "$repo" | cut -d'/' -f2)
-            local output_file="${repo_name}-docs.md"
-            
-            echo "🔄 Processing $repo..."
-            
-            # clone repo
-            if [ -d "temp-repo" ]; then
-              rm -rf temp-repo
-            fi
-            git clone "https://github.com/$repo.git" temp-repo --depth 1 --quiet
-            
-            # start output file
-            echo "# $repo Documentation" > "$output_file"
-            echo "" >> "$output_file"
-            echo "Auto-generated from https://github.com/$repo" >> "$output_file"
-            echo "Generated on: $(date)" >> "$output_file"
-            echo "" >> "$output_file"
-            
-            # process each path
-            IFS=',' read -ra PATH_ARRAY <<< "$paths"
-            for path in "${PATH_ARRAY[@]}"; do
-              # trim whitespace
-              path=$(echo "$path" | xargs)
-              
-              if [ -d "temp-repo/$path" ]; then
-                echo "📁 Found docs at: $path"
-                echo "## Documentation from $path" >> "$output_file"
-                echo "" >> "$output_file"
-                
-                # find and process all .md files
-                find "temp-repo/$path" -name "*.md" -type f | sort | while read -r file; do
-                  filename=$(basename "$file" .md)
-                  echo "  📄 Processing: $filename.md"
-                  echo "### $filename" >> "$output_file"
-                  echo "" >> "$output_file"
-                  cat "$file" >> "$output_file"
-                  echo "" >> "$output_file"
-                  echo "---" >> "$output_file"
-                  echo "" >> "$output_file"
-                done
-              else
-                echo "⚠️  Path not found: $path"
-                echo "⚠️  Path not found: $path" >> "$output_file"
-                echo "" >> "$output_file"
-              fi
-            done
-            
-            # cleanup temp repo
-            rm -rf temp-repo
-            echo "✅ Generated: $output_file"
-            echo ""
-          }
+        steps:
+            - name: Checkout docs repo
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
 
-          echo "🚀 Starting Point-Free documentation sync..."
-          
-          # process repos sequentially
-          process_repo "pointfreeco/swift-composable-architecture" "Sources/ComposableArchitecture/Documentation.docc"
-          process_repo "pointfreeco/swift-navigation" "Sources/AppKitNavigation/Documentation.docc,Sources/SwiftNavigation/Documentation.docc,Sources/SwiftUINavigation/Documentation.docc,Sources/UIKitNavigation/Documentation.docc"
-          process_repo "pointfreeco/swift-dependencies" "Sources/Dependencies/Documentation.docc"
-          process_repo "pointfreeco/swift-case-paths" "Sources/CasePaths/Documentation.docc,Sources/CasePathsCore/Documentation.docc"
-          
-          echo "🎉 All repositories processed!"
+            - name: Process all repositories
+              run: |
+                  # function to process a single repo
+                  process_repo() {
+                    local repo=$1
+                    local paths=$2
+                    local repo_name=$(echo "$repo" | cut -d'/' -f2)
+                    local output_file="${repo_name}-docs.md"
 
-      - name: Commit and push all changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # add all generated files
-          git add *.md
-          
-          # check if there are changes to commit
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update all Point-Free documentation files"
-            git push
-          fi
+                    echo "🔄 Processing $repo..."
+
+                    # clone repo
+                    if [ -d "temp-repo" ]; then
+                      rm -rf temp-repo
+                    fi
+                    git clone "https://github.com/$repo.git" temp-repo --depth 1 --quiet
+
+                    # start output file
+                    echo "# $repo Documentation" > "$output_file"
+                    echo "" >> "$output_file"
+                    echo "Auto-generated from https://github.com/$repo" >> "$output_file"
+                    echo "Generated on: $(date)" >> "$output_file"
+                    echo "" >> "$output_file"
+
+                    # process each path
+                    IFS=',' read -ra PATH_ARRAY <<< "$paths"
+                    for path in "${PATH_ARRAY[@]}"; do
+                      # trim whitespace
+                      path=$(echo "$path" | xargs)
+
+                      if [ -d "temp-repo/$path" ]; then
+                        echo "📁 Found docs at: $path"
+                        echo "## Documentation from $path" >> "$output_file"
+                        echo "" >> "$output_file"
+
+                        # find and process all .md files
+                        find "temp-repo/$path" -name "*.md" -type f | sort | while read -r file; do
+                          filename=$(basename "$file" .md)
+                          echo "  📄 Processing: $filename.md"
+                          echo "### $filename" >> "$output_file"
+                          echo "" >> "$output_file"
+                          cat "$file" >> "$output_file"
+                          echo "" >> "$output_file"
+                          echo "---" >> "$output_file"
+                          echo "" >> "$output_file"
+                        done
+                      else
+                        echo "⚠️  Path not found: $path"
+                        echo "⚠️  Path not found: $path" >> "$output_file"
+                        echo "" >> "$output_file"
+                      fi
+                    done
+
+                    # cleanup temp repo
+                    rm -rf temp-repo
+                    echo "✅ Generated: $output_file"
+                    echo ""
+                  }
+
+                  echo "🚀 Starting Point-Free documentation sync..."
+
+                  # process repos sequentially
+                  process_repo "pointfreeco/swift-composable-architecture" "Sources/ComposableArchitecture/Documentation.docc"
+                  process_repo "pointfreeco/swift-navigation" "Sources/AppKitNavigation/Documentation.docc,Sources/SwiftNavigation/Documentation.docc,Sources/SwiftUINavigation/Documentation.docc,Sources/UIKitNavigation/Documentation.docc"
+                  process_repo "pointfreeco/swift-dependencies" "Sources/Dependencies/Documentation.docc"
+                  process_repo "pointfreeco/swift-case-paths" "Sources/CasePaths/Documentation.docc,Sources/CasePathsCore/Documentation.docc"
+                  process_repo "pointfreeco/sqlite-data" "Sources/SQLiteData/Documentation.docc"
+
+                  echo "🎉 All repositories processed!"
+
+            - name: Commit and push all changes
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
+                  # add all generated files
+                  git add *.md
+
+                  # check if there are changes to commit
+                  if git diff --staged --quiet; then
+                    echo "No changes to commit"
+                  else
+                    git commit -m "Update all Point-Free documentation files"
+                    git push
+                  fi

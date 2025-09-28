@@ -6,18 +6,19 @@ Auto-generated consolidated documentation for Point-Free's Swift libraries. This
 
 When working with Point-Free libraries (Composable Architecture, Swift Navigation, etc), AI assistants often can't parse the official DocC documentation. This repository solves that by:
 
-- Cloning each Point-Free repository
-- Extracting all `.md` files from their documentation folders
-- Consolidating them into single files per library
+-   Cloning each Point-Free repository
+-   Extracting all `.md` files from their documentation folders
+-   Consolidating them into single files per library
 
 ## Available Documentation
 
-| Library | Consolidated File | Original Repository |
-|---------|------------------|---------------------|
+| Library                       | Consolidated File                                                                | Original Repository                                                                                       |
+| ----------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Swift Composable Architecture | [swift-composable-architecture-docs.md](./swift-composable-architecture-docs.md) | [pointfreeco/swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture) |
-| Swift Navigation | [swift-navigation-docs.md](./swift-navigation-docs.md) | [pointfreeco/swift-navigation](https://github.com/pointfreeco/swift-navigation) |
-| Swift Dependencies | [swift-dependencies-docs.md](./swift-dependencies-docs.md) | [pointfreeco/swift-dependencies](https://github.com/pointfreeco/swift-dependencies) |
-| Swift Case Paths | [swift-case-paths-docs.md](./swift-case-paths-docs.md) | [pointfreeco/swift-case-paths](https://github.com/pointfreeco/swift-case-paths) |
+| Swift Navigation              | [swift-navigation-docs.md](./swift-navigation-docs.md)                           | [pointfreeco/swift-navigation](https://github.com/pointfreeco/swift-navigation)                           |
+| Swift Dependencies            | [swift-dependencies-docs.md](./swift-dependencies-docs.md)                       | [pointfreeco/swift-dependencies](https://github.com/pointfreeco/swift-dependencies)                       |
+| Swift Case Paths              | [swift-case-paths-docs.md](./swift-case-paths-docs.md)                           | [pointfreeco/swift-case-paths](https://github.com/pointfreeco/swift-case-paths)                           |
+| SQLiteData                    | [sqlite-data-docs.md](./sqlite-data-docs.md)                                     | [pointfreeco/sqlite-data](https://github.com/pointfreeco/sqlite-data)                                     |
 
 ## How to Use with AI
 
@@ -51,11 +52,13 @@ If Point-Free adds new libraries or changes their documentation structure, simpl
 ## Supported Libraries
 
 Currently tracking documentation for:
-- **Composable Architecture** - State management and architecture
-- **Swift Navigation** - Declarative navigation tools
-- **Swift Dependencies** - Dependency management
-- **Swift Case Paths** - Key path utilities for enums
+
+-   **Composable Architecture** - State management and architecture
+-   **Swift Navigation** - Declarative navigation tools
+-   **Swift Dependencies** - Dependency management
+-   **Swift Case Paths** - Key path utilities for enums
+-   **SQLiteData** - A fast, lightweight replacement for SwiftData
 
 ---
 
-*Generated documentation files are automatically updated and may overwrite manual changes.*
+_Generated documentation files are automatically updated and may overwrite manual changes._
