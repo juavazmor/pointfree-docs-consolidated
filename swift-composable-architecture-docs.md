@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Sun Sep 28 10:16:00 UTC 2025
+Generated on: Tue Oct 14 05:07:17 UTC 2025
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -374,7 +374,7 @@ as any reducer `Feature` uses under the hood, _and_ any effects produced by `Fea
 [environment-values-docs]: https://developer.apple.com/documentation/swiftui/environmentvalues
 [xctest-dynamic-overlay-gh]: http://github.com/pointfreeco/xctest-dynamic-overlay
 [swift-dependencies-gh]: http://github.com/pointfreeco/swift-dependencies
-[swift-deps-docs]: https://pointfreeco.github.io/swift-dependencies/main/documentation/dependencies/
+[swift-deps-docs]: https://swiftpackageindex.com/pointfreeco/swift-dependencies/main/documentation/dependencies
 
 ---
 

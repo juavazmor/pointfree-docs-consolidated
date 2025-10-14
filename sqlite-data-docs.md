@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Sun Sep 28 10:16:01 UTC 2025
+Generated on: Tue Oct 14 05:07:19 UTC 2025
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -16,14 +16,14 @@ Learn how to add SQLiteData to an existing app that uses GRDB.
 [GRDB] is a powerful SQLite library for Swift applications, and it is what is used by SQLiteData
 to interact with SQLite under the hood, such as performing queries and observing changes to the
 database. If you have an existing application using GRDB, and would like to use the tools of this
-library, such as [`@FetchAll`](<doc:FetchAll>), the SQL query builder, and 
+library, such as [`@FetchAll`](<doc:FetchAll>), the SQL query builder, and
 [CloudKit synchronization](<doc:CloudKit>), then there are a few steps you must take.
 
 ## Replace PersistableRecord and FetchableRecord with @Table
 
 The `PersistableRecord` and `FetchableRecord` protocols in GRDB facilitate saving data to the
 database and querying for data in the database. In SQLiteData, the `@Table` macro is responsible
-for this functionality. 
+for this functionality.
 
 ```diff
 -struct Reminder: MutablePersistableRecord, Encodable {
@@ -90,7 +90,7 @@ There are 3 main things to be aware of when applying `@Table` to an existing sch
     then you can provide custom names _via_ the `@Column` macro:
 
     ```swift
-    @Table 
+    @Table
     struct Reminder {
       let id: UUID
       var title = ""
@@ -105,7 +105,7 @@ There are 3 main things to be aware of when applying `@Table` to an existing sch
     `@Column(as:)` on any fields holding UUIDs:
 
     ```swift
-    @Table 
+    @Table
     struct Reminder {
       @Column(as: UUID.BytesRepresentation.self)
       let id: UUID
@@ -116,7 +116,7 @@ There are 3 main things to be aware of when applying `@Table` to an existing sch
     And if your table has an optional UUID, then you will handle that similarly:
 
     ```swift
-    @Table 
+    @Table
     struct ChildReminder {
       @Column(as: UUID?.BytesRepresentation.self)
       let parentID: UUID?
@@ -126,7 +126,7 @@ There are 3 main things to be aware of when applying `@Table` to an existing sch
 
 ## Non-optional primary keys
 
-Some of your data types may have an optional primary key and a `didInsert` callback for setting the 
+Some of your data types may have an optional primary key and a `didInsert` callback for setting the
 ID after insert:
 
 ```swift
@@ -139,7 +139,7 @@ struct Reminder: MutablePersistableRecord, Encodable {
 }
 ```
 
-These can be updated to use non-optional types for the primary key, and the field can be bound as 
+These can be updated to use non-optional types for the primary key, and the field can be bound as
 an immutable `let`:
 
 ```swift
@@ -150,7 +150,7 @@ struct Reminder {
 }
 ```
 
-The `@Table` macro automatically generates a `Draft` type that can be used when you want to be 
+The `@Table` macro automatically generates a `Draft` type that can be used when you want to be
 able to construct a value without the ID specified:
 
 ```swift
@@ -160,7 +160,7 @@ let draft = Reminder.Draft(title: "Get milk")
 Then when this draft value is inserted its ID will be determined by the database:
 
 ```swift
-try Reminder.insert { 
+try Reminder.insert {
   Reminder.Draft(title: "Get milk")
 }
 .execute(db)
@@ -169,7 +169,7 @@ try Reminder.insert {
 You can even use a `RETURNING` clause to grab the ID of the freshly inserted record:
 
 ```swift
-try Reminder.insert { 
+try Reminder.insert {
   Reminder.Draft(title: "Get milk")
 }
 .returning(\.id)
@@ -178,7 +178,7 @@ try Reminder.insert {
 
 ## CloudKit synchronization
 
-The library's [CloudKit](<doc:CloudKit>) synchronization tools require that the tables being 
+The library's [CloudKit](<doc:CloudKit>) synchronization tools require that the tables being
 synchronized have a primary key, and this is enforced through the `PrimaryKeyedTable` protocol.
 The `@Table` macro automatically applies this protocol for you when your type has an `id` field,
 but if you use a different name for your primary key you will need to use the `@Column` macro
@@ -229,8 +229,6 @@ to make sure you understand how to best prepare your app for cloud synchronizati
   - [Accessing CloudKit metadata](#Accessing-CloudKit-metadata)
   - [Unit testing and Xcode previews](#Unit-testing-and-Xcode-previews)
   - [Preparing an existing schema for synchronization](#Preparing-an-existing-schema-for-synchronization)
-    - [Convert Int primary keys to UUID](#Convert-Int-primary-keys-to-UUID)
-    - [Add primary key to all tables](#Add-primary-key-to-all-tables)
   - [Tips and tricks](#Tips-and-tricks)
     - [Updating triggers to be compatible with synchronization](#Updating-triggers-to-be-compatible-with-synchronization)
     - [Developing in the simulator](#Developing-in-the-simulator)
@@ -425,11 +423,11 @@ facilitate synchronizing to CloudKit.
 
 Foreign keys are a SQL feature that allow one to express relationships between tables. This library
 uses that information to correctly implement synchronization behavior, such as knowing what order
-to syncrhonize records (parent first, then children), and knowing what associated records to 
+to syncrhonize records (parent first, then children), and knowing what associated records to
 share when sharing a root record.
 
 To express a foreign key relationship between tables you use the `REFERENCES` clause in the table's
-schema, along with optional `ON DELETE` and `ON UPDATE` qualifiers: 
+schema, along with optional `ON DELETE` and `ON UPDATE` qualifiers:
 
 ```sql
 CREATE TABLE "reminders"(
@@ -470,7 +468,7 @@ when a ``SyncEngine`` is first created. If a uniqueness constraint is detected a
 thrown.
 
 Sometimes it is possible to make the column that you want to be unique into the primary key of
-your table. For example, if you wanted to associate a `RemindersListAsset` type to a 
+your table. For example, if you wanted to associate a `RemindersListAsset` type to a
 `RemindersList` type, you can make the primary key of the former also act as the foreign key:
 
 ```swift
@@ -486,20 +484,23 @@ This will make it so that at least one asset can be associated with a reminders 
 
 #### Avoid reserved CloudKit keywords
 
-In the process of sending data from your database to CloudKit, the library turns rows into 
+In the process of sending data from your database to CloudKit, the library turns rows into
 `CKRecord`s, which is loosely a `[String: Any]` dictionary. However, certain key names are used
 internally by CloudKit and are reserved for their use only. This means those keys cannot be used
 as field names in your Swift data types or SQLite tables.
 
-Here is an exhaustive list of those reserved fields:
+While Apple has not published an exhaustive list of reserved keywords, the following should cover
+most known cases:
 
-* `recordID`
-* `recordType`
 * `creationDate`
 * `creatorUserRecordID`
-* `modificationDate`
+* `etag`
 * `lastModifiedUserRecordID`
+* `modificationDate`
+* `modifiedByDevice`
 * `recordChangeTag`
+* `recordID`
+* `recordType`
 
 ## Backwards compatible migrations
 
@@ -885,159 +886,37 @@ And in preivews you can use it like so:
 
 ## Preparing an existing schema for synchronization
 
-If you have an existing app deployed to the app store using SQLite, then there may be a number
-of steps you must take to prepare for adding CloudKit synchronization, mostly having to do with
-primary keys.
+If you have an existing app deployed to the app store using SQLite, then you may have to perform
+a migration on your schema to prepare it for synchronization. The most important requirement
+detailed above in <doc:CloudKit#Designing-your-schema-with-synchronization-in-mind> is that
+all tables _must_ have a primary key, and all primary keys must be globally unique identifiers 
+such as UUID, and cannot be simple auto-incrementing integers.
 
-### Convert Int primary keys to UUID
+The steps required to perform such a process are quite lengthy (the SQLite docs describe it in 
+[12 parts]), and those steps are easy to get wrong, which can either result in the migration
+failing or your app accidentally corrupting your user's data.
 
-The most important step for migrating an existing SQLite database to be compatible with CloudKit
-synchronization is converting any `Int` primary keys in your tables to UUID, or some other
-globally unique identifier. This can be done in a new migration that is registered when provisioning
-your database, but it does take a few queries to accomplish because SQLite does not support
-changing the definition of an existing column.
+SQLiteData provides a tool called ``SyncEngine/migratePrimaryKeys(_:tables:uuid:)`` that 
+makes it possible to perform this migration in just 2 steps:
 
-The steps are roughly: 1) create a table with the new schema, 2) copy data over from old
-table to new table and convert integer IDs to UUIDs, 3) drop the old table, and finally 4) rename
-the new table to have the same name as the old table.
+  * Update your Swift data types (then used annotated with `@Table`) to use UUID identifiers instead
+  of `Int`, and fix all of the resulting compiler errors in your features.
+  * Create a new migration and invoke ``SyncEngine/migratePrimaryKeys(_:tables:uuid:)`` with the 
+  database handle from your migration and a list of all of your tables:
 
-```swift
-migrator.registerMigration("Convert 'remindersLists' table primary key to UUID") { db in
-  // Step 1: Create new table with updated schema
-  try #sql("""
-    CREATE TABLE "new_remindersLists" (
-      "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
-      -- all other columns from 'remindersLists' table
-    ) STRICT
-    """)
-    .execute(db)
+    ```swift
+    try SyncEngine.migratePrimaryKeys(
+      db,
+      tables: Reminder.self, RemindersList.self, Tag.self
+    )
+    ```
 
-  // Step 2: Copy data from 'remindersLists' to 'new_remindersLists' and convert integer
-  // IDs to UUIDs
-  try #sql("""
-    INSERT INTO "new_remindersLists"
-    SELECT
-      -- This converts integers to UUIDs, e.g. 1 -> 00000000-0000-0000-0000-000000000001
-      '00000000-0000-0000-0000-' || printf('%012x', "id"),
-      -- all other columns from 'remindersLists' table
-    FROM "remindersLists"
-    """)
-    .execute(db)
+That will perform the many step process of migrating each table from integer-based primary keys
+to UUIDs.
 
-  // Step 3: Drop the old 'remindersLists' table
-  try #sql("""
-    DROP TABLE "remindersLists"
-    """)
-    .execute(db)
-
-  // Step 4: Rename 'new_remindersLists' to 'remindersLists'
-  try #sql("""
-    ALTER TABLE "new_remindersLists" RENAME TO "remindersLists"
-    """)
-    .execute(db)
-}
-```
-
-This will need to be done for every table that uses an integer for its primary key. Further,
-for tables with foreign keys, you will need to adapt step 1 to change the types of those
-columns to TEXT and will need to perform the integer-to-UUID conversion for those columns in
-step 2:
-
-```swift
-migrator.registerMigration("Convert 'reminders' table primary key to UUID") { db in
-  // Step 1: Create new table with updated schema
-  try #sql("""
-    CREATE TABLE "new_reminders" (
-      "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
-      "remindersListID" TEXT NOT NULL REFERENCES "remindersLists"("id") ON DELETE CASCADE,
-      -- all other columns from 'reminders' table
-    ) STRICT
-    """)
-    .execute(db)
-
-  // Step 2: Copy data from 'reminders' to 'new_reminders' and convert integer
-  // IDs to UUIDs
-  try #sql("""
-    INSERT INTO "new_reminders"
-    SELECT
-      -- This converts integers to UUIDs, e.g. 1 -> 00000000-0000-0000-0000-000000000001
-      '00000000-0000-0000-0000-' || printf('%012x', "id"),
-      '00000000-0000-0000-0000-' || printf('%012x', "remindersListID"),
-      -- all other columns from 'reminders' table
-    FROM "remindersLists"
-    """)
-    .execute(db)
-
-  // Step 3 and 4 are unchanged...
-}
-```
-
-### Add primary key to all tables
-
-All tables must have a primary key to be synchronized to CloudKit, even typically you would not
-add one to the table. For example, a join table that joins reminders to tags:
-
-```swift
-@Table
-struct ReminderTag {
-  let reminderID: Reminder.ID
-  let tagID: Tag.ID
-}
-```
-
-…must be updated to have a primary key:
-
-
-```diff
- @Table
- struct ReminderTag {
-+  let id: UUID
-   let reminderID: Reminder.ID
-   let tagID: Tag.ID
- }
-```
-
-And a migration must be run to add that column to the table. However, you must perform a multi-step
-migration similar to what is described above in <doc:CloudKit#Convert-Int-primary-keys-to-UUID>.
-You must 1) create a new table with the new primary key column, 2) copy data from the old table
-to the new table, 3) delete the old table, and finally 4) rename the new table.
-
-Here is how such a migration can look like for the `ReminderTag` table above:
-
-```swift
-migrator.registerMigration("Add primary key to 'reminderTags' table") { db in
-  // Step 1: Create new table with updated schema
-  try #sql("""
-    CREATE TABLE "new_reminderTags" (
-      "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
-      "reminderID" TEXT NOT NULL REFERENCES "reminders"("id") ON DELETE CASCADE,
-      "tagID" TEXT NOT NULL REFERENCES "tags"("id") ON DELETE CASCADE
-    ) STRICT
-    """)
-    .execute(db)
-
-  // Step 2: Copy data from 'reminderTags' to 'new_reminderTags'
-  try #sql("""
-    INSERT INTO "new_reminderTags"
-    ("reminderID", "tagID")
-    SELECT "reminderID", "tagID"
-    FROM "reminderTags"
-    """)
-    .execute(db)
-
-  // Step 3: Drop the old 'reminderTags' table
-  try #sql("""
-    DROP TABLE "reminderTags"
-    """)
-    .execute(db)
-
-  // Step 4: Rename 'new_reminderTags' to 'reminderTags'
-  try #sql("""
-    ALTER TABLE "new_reminderTags" RENAME TO "reminderTags"
-    """)
-    .execute(db)
-}
-```
+This migration tool tries to be conservative with its efforts so that if it ever detects a 
+schema it does not know how to handle properly, it will throw an error. If this happens, then
+you must migrate your tables manually using the introduces in <doc:ManuallyMigratingPrimaryKeys>.
 
 ## Tips and tricks
 
@@ -2874,6 +2753,182 @@ reminders.remindersCount      // 100
 Typically the conformances to ``FetchKeyRequest`` can even be made private and nested inside
 whatever type they are used in, such as SwiftUI view, `@Observable` model, or UIKit view controller.
 The only time it needs to be made public is if it's shared amongst many features.
+
+---
+
+### ManuallyMigratingPrimaryKeys
+
+# Manually migrating primary keys
+
+The steps needed to manually migrate your tables so that all tables have a primary key, and so
+that all primary keys are UUIDs.
+
+## Overview
+
+If the [manual migration](<doc:SyncEngine/migratePrimaryKeys(_:tables:uuid:)>) tool provided
+by this library does not work for you, then you will need to migrate your tables manually. 
+This consists of converting integer primary keys to UUIDs, and adding a primary key to all tables
+that do not have one.
+
+### Convert Int primary keys to UUID
+
+The most important step for migrating an existing SQLite database to be compatible with CloudKit
+synchronization is converting any `Int` primary keys in your tables to UUID, or some other
+globally unique identifier. This can be done in a new migration that is registered when provisioning
+your database, but it does take a few queries to accomplish because SQLite does not support
+changing the definition of an existing column.
+
+The steps are roughly: 1) create a table with the new schema, 2) copy data over from old
+table to new table and convert integer IDs to UUIDs, 3) drop the old table, and finally 4) rename
+the new table to have the same name as the old table.
+
+```swift
+migrator.registerMigration("Convert 'remindersLists' table primary key to UUID") { db in
+  // Step 1: Create new table with updated schema
+  try #sql("""
+    CREATE TABLE "new_remindersLists" (
+      "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+      -- all other columns from 'remindersLists' table
+    ) STRICT
+    """)
+    .execute(db)
+
+  // Step 2: Copy data from 'remindersLists' to 'new_remindersLists' and convert integer
+  // IDs to UUIDs
+  try #sql("""
+    INSERT INTO "new_remindersLists"
+    (
+      "id",
+      -- all other columns from 'remindersLists' table
+    )
+    SELECT
+      -- This converts integers to UUIDs, e.g. 1 -> 00000000-0000-0000-0000-000000000001
+      '00000000-0000-0000-0000-' || printf('%012x', "id"),
+      -- all other columns from 'remindersLists' table
+    FROM "remindersLists"
+    """)
+    .execute(db)
+
+  // Step 3: Drop the old 'remindersLists' table
+  try #sql("""
+    DROP TABLE "remindersLists"
+    """)
+    .execute(db)
+
+  // Step 4: Rename 'new_remindersLists' to 'remindersLists'
+  try #sql("""
+    ALTER TABLE "new_remindersLists" RENAME TO "remindersLists"
+    """)
+    .execute(db)
+}
+```
+
+This will need to be done for every table that uses an integer for its primary key. Further,
+for tables with foreign keys, you will need to adapt step 1 to change the types of those
+columns to TEXT and will need to perform the integer-to-UUID conversion for those columns in
+step 2:
+
+```swift
+migrator.registerMigration("Convert 'reminders' table primary key to UUID") { db in
+  // Step 1: Create new table with updated schema
+  try #sql("""
+    CREATE TABLE "new_reminders" (
+      "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+      "remindersListID" TEXT NOT NULL REFERENCES "remindersLists"("id") ON DELETE CASCADE,
+      -- all other columns from 'reminders' table
+    ) STRICT
+    """)
+    .execute(db)
+
+  // Step 2: Copy data from 'reminders' to 'new_reminders' and convert integer
+  // IDs to UUIDs
+  try #sql("""
+    INSERT INTO "new_reminders"
+    (
+      "id",
+      "remindersListID",
+      -- all other columns from 'reminders' table
+    )
+    SELECT
+      -- This converts integers to UUIDs, e.g. 1 -> 00000000-0000-0000-0000-000000000001
+      '00000000-0000-0000-0000-' || printf('%012x', "id"),
+      '00000000-0000-0000-0000-' || printf('%012x', "remindersListID"),
+      -- all other columns from 'reminders' table
+    FROM "remindersLists"
+    """)
+    .execute(db)
+
+  // Step 3 and 4 are unchanged...
+}
+```
+
+### Add primary key to all tables
+
+All tables must have a primary key to be synchronized to CloudKit, even typically you would not
+add one to the table. For example, a join table that joins reminders to tags:
+
+```swift
+@Table
+struct ReminderTag {
+  let reminderID: Reminder.ID
+  let tagID: Tag.ID
+}
+```
+
+…must be updated to have a primary key:
+
+
+```diff
+ @Table
+ struct ReminderTag {
++  let id: UUID
+   let reminderID: Reminder.ID
+   let tagID: Tag.ID
+ }
+```
+
+And a migration must be run to add that column to the table. However, you must perform a multi-step
+migration similar to what is described above in <doc:CloudKit#Convert-Int-primary-keys-to-UUID>.
+You must 1) create a new table with the new primary key column, 2) copy data from the old table
+to the new table, 3) delete the old table, and finally 4) rename the new table.
+
+Here is how such a migration can look like for the `ReminderTag` table above:
+
+```swift
+migrator.registerMigration("Add primary key to 'reminderTags' table") { db in
+  // Step 1: Create new table with updated schema
+  try #sql("""
+    CREATE TABLE "new_reminderTags" (
+      "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+      "reminderID" TEXT NOT NULL REFERENCES "reminders"("id") ON DELETE CASCADE,
+      "tagID" TEXT NOT NULL REFERENCES "tags"("id") ON DELETE CASCADE
+    ) STRICT
+    """)
+    .execute(db)
+
+  // Step 2: Copy data from 'reminderTags' to 'new_reminderTags'
+  try #sql("""
+    INSERT INTO "new_reminderTags"
+    ("reminderID", "tagID")
+    SELECT "reminderID", "tagID"
+    FROM "reminderTags"
+    """)
+    .execute(db)
+
+  // Step 3: Drop the old 'reminderTags' table
+  try #sql("""
+    DROP TABLE "reminderTags"
+    """)
+    .execute(db)
+
+  // Step 4: Rename 'new_reminderTags' to 'reminderTags'
+  try #sql("""
+    ALTER TABLE "new_reminderTags" RENAME TO "reminderTags"
+    """)
+    .execute(db)
+}
+```
+
 
 ---
 
