@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Tue Oct 14 05:07:19 UTC 2025
+Generated on: Sun Jan  4 10:55:07 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -192,6 +192,11 @@ to specify that:
 }
 ```
 
+The library further requires your tables use globally unique identifiers (such as UUID) for their
+primary keys, and in particular auto-incrementing integer IDs do _not_ work. You will need to
+migrate your tables to use UUIDs, see
+<doc:CloudKit#Preparing-an-existing-schema-for-synchronization> for more information.
+
 [GRDB]: http://github.com/groue/GRDB.swift
 
 ---
@@ -287,7 +292,7 @@ struct MyApp: App {
 ```
 
 The `SyncEngine`
-[initializer](<doc:SyncEngine/init(for:tables:privateTables:containerIdentifier:defaultZone:startImmediately:logger:)>)
+[initializer](<doc:SyncEngine/init(for:tables:privateTables:containerIdentifier:defaultZone:startImmediately:delegate:logger:)>)
 has more options you may be interested in configuring.
 
 > Important: You must explicitly provide all tables that you want to synchronize. We do this so that
@@ -306,8 +311,8 @@ you can use the `prepareDatabase` method on `Configuration` to attach the metada
 ```swift
 func appDatabase() -> any DatabaseWriter {
   var configuration = Configuration()
-  configuration.prepareDatabase = { db in
-    db.attachMetadatabase()
+  configuration.prepareDatabase { db in
+    try db.attachMetadatabase()
     …
   }
 }
@@ -437,8 +442,7 @@ CREATE TABLE "reminders"(
 ) STRICT
 ```
 
-> Tip: See SQLite's documentation on [foreign keys] for more information.
-[foreign keys]: https://sqlite.org/foreignkeys.html
+> Tip: See SQLite's documentation on [foreign keys](https://sqlite.org/foreignkeys.html) for more information.
 
 SQLiteData can synchronize many-to-one and many-to-many relationships to CloudKit,
 and you can enforce foreign key constraints in your database connection. While it is possible for
@@ -686,7 +690,7 @@ See <doc:CloudKitSharing> for more information.
 
 ## Assets
 
-> TL;DR: The library packages all BLOB columns in a table into `CKAsset`s and seamlessly decodes
+> TL;DR: The library packages all `BLOB` columns in a table into `CKAsset`s and seamlessly decodes
 > `CKAsset`s back into your tables. We recommend putting large binary blobs of data in their own
 > tables.
 
@@ -696,8 +700,8 @@ assets.
 
 However, general database design guidelines still apply. In particular, it is not recommended to
 store large binary blobs in a table that is queried often. If done naively you may accidentally
-large amounts of data into memory when querying your table, and further large binary blobs can
-slow down SQLite's ability to efficiently access the rows in your tables.
+load large amounts of data into memory when querying your table. Furthermore, large binary blobs
+can slow down SQLite's ability to efficiently access the rows in your tables.
 
 It is recommended to hold binary blobs in a separate, but related, table. For example, if you are
 building a reminders app that has lists, and you allow your users to assign an image to a list.
@@ -720,7 +724,7 @@ struct RemindersListCoverImage {
 }
 /*
 CREATE TABLE "remindersListCoverImages" (
-  "remindersListID" TEXT PRIMARY KEY NOT NULL REFERENCES "remindersLists"("id"),
+  "remindersListID" TEXT PRIMARY KEY NOT NULL REFERENCES "remindersLists"("id") ON DELETE CASCADE,
   "image" BLOB NOT NULL
 )
 */
@@ -733,7 +737,7 @@ data for a list when you need it.
 
 While the library tries to make CloudKit synchronization as seamless and hidden as possible,
 there are times you will need to access the underlying CloudKit types for your tables and records.
-The ``SyncMetadata``table is the central place where this data is stored, and it is publicly
+The ``SyncMetadata`` table is the central place where this data is stored, and it is publicly
 exposed for you to query it in whichever way you want.
 
 > Important: In order to query the `SyncMetadata` table from your database connection you will need
@@ -741,8 +745,8 @@ to attach the metadatabase to your database connection. This can be done with th
 ``GRDB/Database/attachMetadatabase(containerIdentifier:)`` method defined on `Database`. See
 <doc:CloudKit#Setting-up-a-SyncEngine> for more information on how to do this.
 
-With that done you can use the ``StructuredQueriesCore/PrimaryKeyedTable/metadata(for:)`` method
-to construct a SQL query for fetching the meta data associated with one of your records.
+With that done you can use the ``StructuredQueriesCore/PrimaryKeyedTable/syncMetadataID`` property
+to construct a SQL query for fetching the metadata associated with one of your records.
 
 For example, if you want to retrieve the `CKRecord` that is associated with a particular row in
 one of your tables, say a reminder, then you can use ``SyncMetadata/lastKnownServerRecord`` to
@@ -750,8 +754,8 @@ retrieve the `CKRecord` and then invoke a CloudKit database function to retrieve
 
 ```swift
 let lastKnownServerRecord = try database.read { db in
-  try RemindersList
-    .metadata(for: remindersListID)
+  try SyncMetadata
+    .find(remindersList.syncMetadataID)
     .select(\.lastKnownServerRecord)
     .fetchOne(db)
     ?? nil
@@ -778,7 +782,7 @@ will give you access to the most current list of participants and permissions fo
 ```swift
 let share = try database.read { db in
   try RemindersList
-    .metadata(for: remindersListID)
+    .find(remindersList.syncMetadataID)
     .select(\.share)
     .fetchOne(db)
 }
@@ -806,7 +810,7 @@ following:
 
 @FetchAll(
   RemindersList
-    .leftJoin(SyncMetadata.all) { $0.hasMetadata(in: $1) }
+    .leftJoin(SyncMetadata.all) { $0.syncMetadataID.eq($1.id) }
     .select {
       Row.Columns(
         remindersList: $0,
@@ -817,7 +821,7 @@ following:
 var rows
 ```
 
-Here we have used the ``StructuredQueriesCore/PrimaryKeyedTableDefinition/hasMetadata(in:)`` helper
+Here we have used the ``StructuredQueriesCore/PrimaryKeyedTableDefinition/syncMetadataID`` helper
 that is defined on all primary key tables so that we can join ``SyncMetadata`` to `RemindersList`.
 
 <!--
@@ -873,7 +877,7 @@ struct MySuite {
 }
 ```
 
-And in preivews you can use it like so:
+And in previews you can use it like so:
 
 ```swift
 #Preview {
@@ -884,24 +888,42 @@ And in preivews you can use it like so:
 }
 ```
 
+> Tip: If you configure your ``SyncEngine`` with a ``SyncEngineDelegate``, you can pass it to the
+> bootstrap function for configuration:
+>
+> ```diff
+>  extension DependencyValues {
+>    mutating func bootstrapDatabase(
+> +    syncEngineDelegate: (any SyncEngineDelegate)? = nil
+>    ) throws {
+>      defaultDatabase = try Reminders.appDatabase()
+>      defaultSyncEngine = try SyncEngine(
+>        for: defaultDatabase,
+>        tables: // ...
+> +      delegate: syncEngineDelegate
+>      )
+>    }
+>  }
+> ```
+
 ## Preparing an existing schema for synchronization
 
 If you have an existing app deployed to the app store using SQLite, then you may have to perform
 a migration on your schema to prepare it for synchronization. The most important requirement
 detailed above in <doc:CloudKit#Designing-your-schema-with-synchronization-in-mind> is that
-all tables _must_ have a primary key, and all primary keys must be globally unique identifiers 
+all tables _must_ have a primary key, and all primary keys must be globally unique identifiers
 such as UUID, and cannot be simple auto-incrementing integers.
 
-The steps required to perform such a process are quite lengthy (the SQLite docs describe it in 
+The steps required to perform such a process are quite lengthy (the SQLite docs describe it in
 [12 parts]), and those steps are easy to get wrong, which can either result in the migration
 failing or your app accidentally corrupting your user's data.
 
-SQLiteData provides a tool called ``SyncEngine/migratePrimaryKeys(_:tables:uuid:)`` that 
+SQLiteData provides a tool called ``SyncEngine/migratePrimaryKeys(_:tables:uuid:)`` that
 makes it possible to perform this migration in just 2 steps:
 
   * Update your Swift data types (then used annotated with `@Table`) to use UUID identifiers instead
   of `Int`, and fix all of the resulting compiler errors in your features.
-  * Create a new migration and invoke ``SyncEngine/migratePrimaryKeys(_:tables:uuid:)`` with the 
+  * Create a new migration and invoke ``SyncEngine/migratePrimaryKeys(_:tables:uuid:)`` with the
   database handle from your migration and a list of all of your tables:
 
     ```swift
@@ -914,7 +936,7 @@ makes it possible to perform this migration in just 2 steps:
 That will perform the many step process of migrating each table from integer-based primary keys
 to UUIDs.
 
-This migration tool tries to be conservative with its efforts so that if it ever detects a 
+This migration tool tries to be conservative with its efforts so that if it ever detects a
 schema it does not know how to handle properly, it will throw an error. If this happens, then
 you must migrate your tables manually using the introduces in <doc:ManuallyMigratingPrimaryKeys>.
 
@@ -1000,10 +1022,10 @@ Info.plist with a value of `true`. This is subtly documented in [Apple's documen
   - [Accepting shared records](#Accepting-shared-records)
   - [Diving deeper into sharing](#Diving-deeper-into-sharing)
     - [Sharing root records](#Sharing-root-records)
-      - [Sharing foreign key relationships](#Sharing-foreign-key-relationships)
-        - [One-to-many relationships](#One-to-many-relationships)
-        - [Many-to-many relationships](#Many-to-many-relationships)
-        - [One-to-"at most one" relationships](#One-to-at-most-one-relationships)
+    - [Sharing foreign key relationships](#Sharing-foreign-key-relationships)
+      - [One-to-many relationships](#One-to-many-relationships)
+      - [Many-to-many relationships](#Many-to-many-relationships)
+      - [One-to-"at most one" relationships](#One-to-at-most-one-relationships)
   - [Sharing permissions](#Sharing-permissions)
   - [Controlling what data is shared](#Controlling-what-data-is-shared)
 
@@ -1175,7 +1197,7 @@ a "root" is `RemindersList`. It is the only one with no foreign key relationship
 `Reminder`, `CoverImage`, `Tag` or `ReminderTag` can be directly shared on their own because they
 are not root tables.
 
-#### Sharing foreign key relationships
+### Sharing foreign key relationships
 
 > Important: Foreign key relationships are automatically synchronized, but only if the related
 > record has a single foreign key. Records with multiple foreign keys cannot be synchronized.
@@ -1374,15 +1396,15 @@ select the ``SyncMetadata/share`` value:
 
 ```swift
 let share = try await database.read { db in
-  RemindersList
-    .metadata(for: id)
+  SyncMetadata
+    .find(remindersList.syncMetadataID)
     .select(\.share)
     .fetchOne(db)
     ?? nil
 }
 guard
   share?.currentUserParticipant?.permission == .readWrite
-    || share?.permission == .readWrite
+    || share?.publicPermission == .readWrite
 else {
   // User does not have permissions to write to record.
   return
@@ -2766,7 +2788,7 @@ that all primary keys are UUIDs.
 ## Overview
 
 If the [manual migration](<doc:SyncEngine/migratePrimaryKeys(_:tables:uuid:)>) tool provided
-by this library does not work for you, then you will need to migrate your tables manually. 
+by this library does not work for you, then you will need to migrate your tables manually.
 This consists of converting integer primary keys to UUIDs, and adding a primary key to all tables
 that do not have one.
 
@@ -2929,6 +2951,69 @@ migrator.registerMigration("Add primary key to 'reminderTags' table") { db in
 }
 ```
 
+
+---
+
+### MigrationGuides
+
+# Migration guides
+
+Learn how to upgrade your application to the latest version of SQLiteData.
+
+## Overview
+
+SQLiteData is under constant development, and we are always looking for ways to simplify the
+library and make it more powerful. As such, we often need to deprecate certain APIs in favor of
+newer ones. We recommend people update their code as quickly as possible to the newest APIs, and
+these guides contain tips to do so.
+
+> Important: Before following any particular migration guide be sure you have followed all the
+> preceding migration guides.
+
+## Topics
+
+- <doc:MigratingTo1.4>
+
+---
+
+### MigratingTo1.4
+
+# Migrating to 1.4
+
+SQLiteData 1.4 introduces a new tool for tying the lifecycle database subscriptions to the
+lifecycle of the surrounding async context, but it may incidentally cause "Result of call …
+is unused" warnings in your project.
+
+## Overview
+
+The `load` method defined on [`@FetchAll`](<doc:FetchAll>) / [`@FetchOne`](<doc:FetchOne>) /
+[`@Fetch`](<doc:Fetch>) all now return a discardable result, ``FetchSubscription``. Awaiting the
+``FetchSubscription/task`` of that result ties the lifecycle of the subscription to the database
+to the lifecycle of the surrounding async context, which can help views to automatically
+unsubscribe from the database when they are not visible.
+
+However, when used with `withErrorReporting` you are likely to get the following warning:
+
+```swift
+private func updateQuery() async {
+  // ⚠️ Result of call to 'withErrorReporting(_:to:fileID:filePath:line:column:isolation:catching:)' is unused
+  await withErrorReporting {
+    try await $rows.load(…)
+  }
+}
+```
+
+This is happening because although `load` has a discardable result, Swift does not propagate that
+to `withErrorReporting`, and so Swift thinks you have an unused value. To fix you will need to
+explicitly ignore the result with `_ = `:
+
+```swift
+private func updateQuery() async {
+  _ = await withErrorReporting {
+    try await $rows.load(…)
+  }
+}
+```
 
 ---
 
@@ -3222,7 +3307,7 @@ code, but we personally feel that it is simpler, more flexible and more powerful
 migrator.registerMigration("Create tables") { db in
   try #sql("""
     CREATE TABLE "remindersLists"(
-      "id" INT NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
       "title" TEXT NOT NULL
     ) STRICT
     """)
@@ -3230,10 +3315,10 @@ migrator.registerMigration("Create tables") { db in
 
   try #sql("""
     CREATE TABLE "reminders"(
-      "id" INT NOT NULL PRIMARY KEY AUTOINCREMENT,
-      "isCompleted" INT NOT NULL DEFAULT 0,
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "isCompleted" INTEGER NOT NULL DEFAULT 0,
       "title" TEXT NOT NULL,
-      "remindersListID" INT NOT NULL REFERENCES "remindersLists"("id") ON DELETE CASCADE
+      "remindersListID" INTEGER NOT NULL REFERENCES "remindersLists"("id") ON DELETE CASCADE
     ) STRICT
     """)
     .execute(db)
@@ -3543,27 +3628,8 @@ on all of their devices, there is an additional step you must take. See
 
 ### Conformances
 
-- ``Swift/Bool``
-- ``Swift/Character``
-- ``Swift/Double``
-- ``Swift/Float``
-- ``Swift/Float16``
-- ``Swift/Int``
-- ``Swift/Int128``
-- ``Swift/Int16``
-- ``Swift/Int32``
-- ``Swift/Int64``
-- ``Swift/Int8``
 - ``Swift/String``
 - ``Swift/Substring``
-- ``Swift/UInt``
-- ``Swift/UInt128``
-- ``Swift/UInt16``
-- ``Swift/UInt32``
-- ``Swift/UInt64``
-- ``Swift/UInt8``
-- ``Swift/Optional``
-- ``Swift/Unicode/Scalar``
 - ``Foundation/UUID``
 - ``Tagged/Tagged``
 
@@ -3585,7 +3651,8 @@ synchronization.
 ## Overview
 
 SQLiteData is a [fast](#Performance), lightweight replacement for SwiftData, supporting CloudKit
-synchronization (and even CloudKit sharing), built on top of the popular [GRDB] library.
+synchronization (and even CloudKit sharing), built on top of the popular
+[GRDB](https://github.com/groue/GRDB.swift) library.
 
 @Row {
   @Column {
@@ -3756,11 +3823,9 @@ a model context, via a property wrapper:
   }
 }
 
-> Important: SQLiteData uses [GRDB] under the hood for interacting with SQLite, and you will use
-> its tools for creating transactions for writing to the database, such as the `database.write`
-> method above.
-
-[GRDB]: https://github.com/groue/GRDB.swift
+> Important: SQLiteData uses [GRDB](https://github.com/groue/GRDB.swift) under the hood for
+> interacting with SQLite, and you will use its tools for creating transactions for writing
+> to the database, such as the `database.write` method above.
 
 For more information on how SQLiteData compares to SwiftData, see <doc:ComparisonWithSwiftData>.
 
@@ -3828,10 +3893,9 @@ for data and keep your views up-to-date when data in the database changes, and y
 either using its type-safe, discoverable query building APIs, or using its `#sql` macro for writing
 safe SQL strings.
 
-Further, this library is built on the popular and battle-tested [GRDB] library for
-interacting with SQLite, such as executing queries and observing the database for changes.
-
-[GRDB]: https://github.com/groue/GRDB.swift
+Further, this library is built on the popular and battle-tested
+[GRDB](https://github.com/groue/GRDB.swift) library for interacting with SQLite, such as executing
+queries and observing the database for changes.
 
 ## What is StructuredQueries?
 
@@ -3879,6 +3943,8 @@ with SQLite to take full advantage of GRDB and SQLiteData.
 
 - ``StructuredQueriesCore/Statement``
 - ``StructuredQueriesCore/SelectStatement``
+- ``StructuredQueriesCore/Table``
+- ``StructuredQueriesCore/PrimaryKeyedTable``
 - ``QueryCursor``
 
 ### Observing model data
@@ -3886,15 +3952,18 @@ with SQLite to take full advantage of GRDB and SQLiteData.
 - ``FetchAll``
 - ``FetchOne``
 - ``Fetch``
+- ``FetchSubscription``
 
 ### CloudKit synchronization and sharing
 
 - <doc:CloudKit>
 - <doc:CloudKitSharing>
 - ``SyncEngine``
+- ``SyncEngineDelegate``
 - ``Dependencies/DependencyValues/defaultSyncEngine``
 - ``IdentifierStringConvertible``
 - ``SyncMetadata``
+- ``StructuredQueriesCore/PrimaryKeyedTableDefinition/syncMetadataID``
 - ``StructuredQueriesCore/PrimaryKeyedTableDefinition/hasMetadata(in:)``
 - ``SharedRecord``
 
