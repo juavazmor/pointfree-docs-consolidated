@@ -3,9 +3,11 @@ name: Sync Point-Free Documentation
 
 on:
     workflow_dispatch: # manual trigger
+    schedule:
+        - cron: "0 6 * * *" # daily at 6:00 UTC
 
 jobs:
-    sync-docs:
+    check-and-sync:
         runs-on: ubuntu-latest
 
         steps:
@@ -14,8 +16,79 @@ jobs:
               with:
                   token: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Process all repositories
+            - name: Check for updates and sync
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
+                  # define repositories to track
+                  declare -A REPOS
+                  REPOS["pointfreeco/swift-composable-architecture"]="Sources/ComposableArchitecture/Documentation.docc"
+                  REPOS["pointfreeco/swift-navigation"]="Sources/AppKitNavigation/Documentation.docc,Sources/SwiftNavigation/Documentation.docc,Sources/SwiftUINavigation/Documentation.docc,Sources/UIKitNavigation/Documentation.docc"
+                  REPOS["pointfreeco/swift-dependencies"]="Sources/Dependencies/Documentation.docc"
+                  REPOS["pointfreeco/swift-case-paths"]="Sources/CasePaths/Documentation.docc,Sources/CasePathsCore/Documentation.docc"
+                  REPOS["pointfreeco/sqlite-data"]="Sources/SQLiteData/Documentation.docc"
+
+                  # load last sync state
+                  SYNC_FILE=".last-sync.json"
+                  if [ -f "$SYNC_FILE" ]; then
+                    echo "📋 Loading previous sync state..."
+                    LAST_SYNC=$(cat "$SYNC_FILE")
+                  else
+                    echo "📋 No previous sync state found, will sync all repos"
+                    LAST_SYNC="{}"
+                  fi
+
+                  # check each repo for updates
+                  REPOS_TO_UPDATE=""
+                  NEW_SYNC="{}"
+
+                  for repo in "${!REPOS[@]}"; do
+                    echo "🔍 Checking $repo..."
+
+                    # get latest commit SHA using GitHub API
+                    LATEST_SHA=$(curl -s -H "Authorization: token $GH_TOKEN" \
+                      "https://api.github.com/repos/$repo/commits/main" | \
+                      jq -r '.sha // empty')
+
+                    if [ -z "$LATEST_SHA" ]; then
+                      echo "  ⚠️  Could not fetch SHA for $repo, will sync anyway"
+                      REPOS_TO_UPDATE="$REPOS_TO_UPDATE $repo"
+                    else
+                      # get last synced SHA
+                      LAST_SHA=$(echo "$LAST_SYNC" | jq -r ".\"$repo\" // empty")
+
+                      if [ "$LATEST_SHA" != "$LAST_SHA" ]; then
+                        echo "  📦 Updates found! ($LAST_SHA -> $LATEST_SHA)"
+                        REPOS_TO_UPDATE="$REPOS_TO_UPDATE $repo"
+                      else
+                        echo "  ✅ No changes"
+                      fi
+                    fi
+
+                    # build new sync state
+                    if [ -n "$LATEST_SHA" ]; then
+                      NEW_SYNC=$(echo "$NEW_SYNC" | jq --arg repo "$repo" --arg sha "$LATEST_SHA" '. + {($repo): $sha}')
+                    fi
+                  done
+
+                  # if no updates and not manual trigger, exit early
+                  if [ -z "$REPOS_TO_UPDATE" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+                    echo ""
+                    echo "🎉 All documentation is up to date! No sync needed."
+                    exit 0
+                  fi
+
+                  # if manual trigger, sync all repos
+                  if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+                    echo ""
+                    echo "🔧 Manual trigger detected, syncing all repos..."
+                    REPOS_TO_UPDATE="${!REPOS[*]}"
+                  fi
+
+                  echo ""
+                  echo "🚀 Starting sync for:$REPOS_TO_UPDATE"
+                  echo ""
+
                   # function to process a single repo
                   process_repo() {
                     local repo=$1
@@ -73,29 +146,33 @@ jobs:
                     echo ""
                   }
 
-                  echo "🚀 Starting Point-Free documentation sync..."
+                  # process only repos that need updating
+                  for repo in $REPOS_TO_UPDATE; do
+                    paths="${REPOS[$repo]}"
+                    if [ -n "$paths" ]; then
+                      process_repo "$repo" "$paths"
+                    fi
+                  done
 
-                  # process repos sequentially
-                  process_repo "pointfreeco/swift-composable-architecture" "Sources/ComposableArchitecture/Documentation.docc"
-                  process_repo "pointfreeco/swift-navigation" "Sources/AppKitNavigation/Documentation.docc,Sources/SwiftNavigation/Documentation.docc,Sources/SwiftUINavigation/Documentation.docc,Sources/UIKitNavigation/Documentation.docc"
-                  process_repo "pointfreeco/swift-dependencies" "Sources/Dependencies/Documentation.docc"
-                  process_repo "pointfreeco/swift-case-paths" "Sources/CasePaths/Documentation.docc,Sources/CasePathsCore/Documentation.docc"
-                  process_repo "pointfreeco/sqlite-data" "Sources/SQLiteData/Documentation.docc"
+                  # save new sync state
+                  echo "$NEW_SYNC" | jq '.' > "$SYNC_FILE"
+                  echo "💾 Saved sync state to $SYNC_FILE"
 
-                  echo "🎉 All repositories processed!"
+                  echo ""
+                  echo "🎉 Sync complete!"
 
-            - name: Commit and push all changes
+            - name: Commit and push changes
               run: |
                   git config --local user.email "action@github.com"
                   git config --local user.name "GitHub Action"
 
-                  # add all generated files
-                  git add *.md
+                  # add all generated files and sync state
+                  git add *.md .last-sync.json
 
                   # check if there are changes to commit
                   if git diff --staged --quiet; then
                     echo "No changes to commit"
                   else
-                    git commit -m "Update all Point-Free documentation files"
+                    git commit -m "Update Point-Free documentation files"
                     git push
                   fi
