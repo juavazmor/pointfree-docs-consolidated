@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Tue Oct 14 05:07:17 UTC 2025
+Generated on: Sun Jan  4 10:55:06 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -256,7 +256,7 @@ Toggle("Notifications", text: $store.enableNotifications)
 // ...
 ```
 
-Should you need to layer additional functionality over these bindings, your can pattern match the
+Should you need to layer additional functionality over these bindings, you can pattern match the
 action for a given key path in the reducer:
 
 ```swift
