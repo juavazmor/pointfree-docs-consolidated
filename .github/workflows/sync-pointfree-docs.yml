@@ -71,18 +71,11 @@ jobs:
                     fi
                   done
 
-                  # if no updates and not manual trigger, exit early
-                  if [ -z "$REPOS_TO_UPDATE" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+                  # if no updates, exit early
+                  if [ -z "$REPOS_TO_UPDATE" ]; then
                     echo ""
                     echo "🎉 All documentation is up to date! No sync needed."
                     exit 0
-                  fi
-
-                  # if manual trigger, sync all repos
-                  if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-                    echo ""
-                    echo "🔧 Manual trigger detected, syncing all repos..."
-                    REPOS_TO_UPDATE="${!REPOS[*]}"
                   fi
 
                   echo ""
