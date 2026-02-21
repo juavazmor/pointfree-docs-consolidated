@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Wed Feb 18 06:25:56 UTC 2026
+Generated on: Sat Feb 21 06:14:54 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -8313,6 +8313,25 @@ development of the library.
 
 ---
 
+### EffectDeprecations
+
+# Deprecations
+
+Review unsupported reducer APIs and their replacements.
+
+## Overview
+
+Avoid using deprecated APIs in your app. Select a method to see the replacement that you should use
+instead.
+
+## Topics
+
+### Deprecated types
+
+- ``TaskResult``
+
+---
+
 ### ReducerDeprecations
 
 # Deprecations
@@ -8480,7 +8499,6 @@ instead.
 - ``run(priority:operation:catch:fileID:filePath:line:column:)``
 - ``send(_:)``
 - ``EffectOf``
-- ``TaskResult``
 
 ### Cancellation
 
@@ -8509,6 +8527,10 @@ instead.
 - ``publisher(_:)``
 - ``debounce(id:for:scheduler:options:)``
 - ``throttle(id:for:scheduler:latest:)``
+
+### Deprecations
+
+- <doc:EffectDeprecations>
 
 ---
 
@@ -9551,34 +9573,6 @@ designed with SwiftUI in mind, and comes with many powerful tools to integrate i
 ### Building Content
 
 - ``CaseLet``
-
----
-
-### TaskResult
-
-# ``ComposableArchitecture/TaskResult``
-
-## Topics
-
-### Representing a task result
-
-- ``success(_:)``
-- ``failure(_:)``
-
-### Converting a throwing expression
-
-- ``init(catching:)``
-
-### Accessing a result's value
-
-- ``value``
-
-### Transforming results
-
-- ``map(_:)``
-- ``flatMap(_:)``
-- ``init(_:)``
-- ``Swift/Result/init(_:)``
 
 ---
 
