@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Tue Feb 24 06:24:37 UTC 2026
+Generated on: Sat Feb 28 06:10:02 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -3936,10 +3936,10 @@ This is an inefficient way to share logic. Sending actions is not as lightweight
 as, say, calling a method on a class. Actions travel through multiple layers of an application, and 
 at each layer a reducer can intercept and reinterpret the action.
 
-It is far better to share logic via simple methods on your ``Reducer`` conformance.
+It is far better to share logic via simple methods, for example on your ``Reducer`` conformance.
 The helper methods can take `inout State` as an argument if it needs to make mutations, and it
-can return an `Effect<Action>`. This allows you to share logic without incurring the cost
-of sending needless actions.
+can return an `Effect<Action>`. This allows you to share logic across a reducer without incurring
+the cost of sending needless actions.
 
 For example, suppose that there are 3 UI components in your feature such that when any is changed
 you want to update the corresponding field of state, but then you also want to make some mutations
@@ -4101,9 +4101,8 @@ store.send(.textFieldChanged("Hello") {
 ##### Sharing logic in child features
 
 There is another common scenario for sharing logic in features where the parent feature wants to
-invoke logic in a child feature. One can technically do this by sending actions from the parent 
-to the child, but we do not recommend it (see above in <doc:Performance#Sharing-logic-with-actions>
-to learn why):
+invoke logic in a child feature. You can accomplish this by sending actions from the parent to the
+child:
 
 ```swift
 // Handling action from parent feature:
@@ -4112,12 +4111,9 @@ case .buttonTapped:
   return .send(.child(.refresh))
 ```
 
-Instead, we recommend invoking the child reducer directly:
-
-```swift
-case .buttonTapped:
-  return reduce(into: &state, action: .child(.refresh))
-```
+With the same caveat that this is not the most efficient way to communicate to a child. If
+performance is a concern, consider extracting the shared logic to helpers that can be invoked from
+either domain.
 
 ### CPU intensive calculations
 
@@ -6272,53 +6268,9 @@ also how effects are executed and feed data back into the system.
 
 ## Testing state changes
 
-State changes are by far the simplest thing to test in features built with the library. A
-``Reducer``'s first responsibility is to mutate the current state based on the action received into
-the system. To test this we can technically run a piece of mutable state through the reducer and
-then assert on how it changed after, like this:
-
-```swift
-@Reducer
-struct Feature {
-  @ObservableState
-  struct State: Equatable {
-    var count = 0
-  }
-  enum Action {
-    case incrementButtonTapped
-    case decrementButtonTapped
-  }
-  var body: some Reduce<State, Action> {
-    Reduce { state, action in
-      switch action {
-      case .incrementButtonTapped:
-        state.count += 1
-        return .none
-      case .decrementButtonTapped:
-        state.count -= 1
-        return .none
-      }
-    }
-  }
-}
-
-@Test
-func basics() {
-  let feature = Feature()
-  var currentState = Feature.State(count: 0)
-  _ = feature.reduce(into: &currentState, action: .incrementButtonTapped)
-  #expect(currentState == State(count: 1))
-
-  _ = feature.reduce(into: &currentState, action: .decrementButtonTapped)
-  #expect(currentState == State(count: 0))
-}
-```
-
-This will technically work, but it's a lot boilerplate for something that should be quite simple.
-
-The library comes with a tool specifically designed to make testing like this much simpler and more
-concise. It's called ``TestStore``, and it is constructed similarly to ``Store`` by providing the
-initial state of the feature and the ``Reducer`` that runs the feature's logic:
+The library comes with a tool specifically designed to test features simply and concisely. It's
+called ``TestStore``, and it is constructed similarly to ``Store`` by providing the initial state of
+the feature and the ``Reducer`` that runs the feature's logic:
 
 ```swift
 import Testing
@@ -6338,10 +6290,10 @@ struct CounterTests {
 > ``TestStore`` can suspend. And while tests do not _require_ the main actor, ``TestStore`` _is_
 > main actor-isolated, and so we recommend annotating your tests and suites with `@MainActor`.
 
-Test stores have a ``TestStore/send(_:assert:fileID:file:line:column:)-8f2pl`` method, but it behaves differently from
-stores and view stores. You provide an action to send into the system, but then you must also
-provide a trailing closure to describe how the state of the feature changed after sending the
-action:
+Test stores have a ``TestStore/send(_:assert:fileID:file:line:column:)-8f2pl`` method, but it
+behaves differently from stores and view stores. You provide an action to send into the system, but
+then you must also provide a trailing closure to describe how the state of the feature changed after
+sending the action:
 
 ```swift
 await store.send(.incrementButtonTapped) {
