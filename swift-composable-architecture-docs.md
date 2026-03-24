@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Fri Mar 20 06:21:02 UTC 2026
+Generated on: Tue Mar 24 06:26:14 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -1827,21 +1827,28 @@ deprecates a number of older APIs in preparation for Composable Architecture 2.0
 
 Version 1.25 includes both new features and a significant batch of deprecations that pave the way
 for Composable Architecture 2.0. Many of the deprecations are "trait" deprecations that only emit
-warnings when the `ComposableArchitecture2Deprecations` package trait is enabled. You can enable it
-in your `Package.swift`:
+warnings when package traits are enabled. You can enable them in your `Package.swift`:
 
 ```swift
 .package(
   url: "https://github.com/pointfreeco/swift-composable-architecture",
   from: "1.25.0",
-  traits: ["ComposableArchitecture2Deprecations"]
+  traits: [
+    "ComposableArchitecture2Deprecations",
+    "ComposableArchitecture2DeprecationOverloads"
+  ]
 )
 ```
 
 …or in your project settings, starting from Xcode 26.4.
 
-This allows you to incrementally adopt the changes at your own pace. Hard deprecations, on the other
-hand, will always emit warnings regardless of the trait.
+  * `ComposableArchitecture2Deprecations` is meant to be left enabled, to catch new deprecations in
+    new versions of Composable Architecture 1.0.
+  * `ComposableArchitecture2DeprecationOverloads` is meant to be enabled temporarily during
+    migration, as they introduce overloads that can regress compile times in your applications.
+
+These traits allow you to incrementally adopt the changes at your own pace. Hard deprecations, on
+the other hand, will always emit warnings regardless of the trait.
 
 ## New features
 
