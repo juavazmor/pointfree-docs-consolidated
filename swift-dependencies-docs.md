@@ -1,7 +1,7 @@
 # pointfreeco/swift-dependencies Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-dependencies
-Generated on: Fri Feb 20 06:21:27 UTC 2026
+Generated on: Thu Mar 26 06:28:38 UTC 2026
 
 ## Documentation from Sources/Dependencies/Documentation.docc
 
