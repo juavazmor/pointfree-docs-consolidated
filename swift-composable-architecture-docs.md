@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Wed Apr  1 06:37:42 UTC 2026
+Generated on: Thu Apr  2 06:29:34 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -1880,11 +1880,13 @@ bindings to `Bool` bindings:
 ```
 
 Another important difference is that holding non-feature state in a destination enum with an
-associated action (such as the action of an `AlertState<Action>`) requires an explicit `Action` enum
-definition:
+associated action (such as the action of an `AlertState<Action>`) requires an explicit
+`@ReducerCaseIgnored` on the non-feature case, as well as an explicit `Action` enum definition to
+define the corresponding case(s):
 
 ```diff
  @Reducer enum Destination {
++  @ReducerCaseIgnored
    case alert(AlertState<Alert>)
    case settings(Settings)
 
