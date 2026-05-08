@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Fri Apr 10 06:40:02 UTC 2026
+Generated on: Fri May  8 06:39:39 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -4077,7 +4077,7 @@ This means that even if you wrap the body of the view in `WithPerceptionTracking
 
 ```swift
 WithPerceptionTracking {
-  ForEach(store.scope(state: \.rows, action: \.rows), id: \.state.id) { store in
+  ForEach(store.scope(\.rows, action: \.rows), id: \.state.id) { store in
     Text(store.title)
   }
 }
@@ -4090,7 +4090,7 @@ The fix for this is to wrap the content of the trailing closure in another `With
 
 ```swift
 WithPerceptionTracking {
-  ForEach(store.scope(state: \.rows, action: \.rows), id: \.state.id) { store in
+  ForEach(store.scope(\.rows, action: \.rows), id: \.state.id) { store in
     WithPerceptionTracking {
       Text(store.title)
     }
@@ -4440,8 +4440,8 @@ This way an action is only sent once the user stops moving the slider.
 
 ### Store scoping
 
-In the 1.5.6 release of the library a change was made to ``Store/scope(state:action:)-90255`` that
-made it more sensitive to performance considerations.
+In the 1.5.6 release of the library a change was made to ``Store/scope(_:action:)`` that made it
+more sensitive to performance considerations.
 
 The most common form of scoping, that of scoping directly along boundaries of child features, is
 the most performant form of scoping and is the intended use of scoping. The library is slowly 
@@ -4452,7 +4452,7 @@ child view:
 
 ```swift
 ChildView(
-  store: store.scope(state: \.child, action: \.child)
+  store: store.scope(\.child, action: \.child)
 )
 ```
 
@@ -4461,7 +4461,7 @@ such as ``SwiftUI/View/sheet(store:onDismiss:content:)``, also falls under the i
 use of scope:
 
 ```swift
-.sheet(store: store.scope(state: \.child, action: \.child)) { store in
+.sheet(store: store.scope(\.child, action: \.child)) { store in
   ChildView(store: store)
 }
 ```
@@ -4487,7 +4487,7 @@ And then in the view, say you scoped along that computed property:
 
 ```swift
 ChildView(
-  store: store.scope(state: \.computedChild, action: \.child)
+  store: store.scope(\.computedChild, action: \.child)
 )
 ```
 
@@ -4505,12 +4505,11 @@ using computed properties in scopes. You can even put a `print` statement in the
 so that you can see first hand just how many times it is being invoked while running your 
 application.
 
-To fix the problem we recommend using ``Store/scope(state:action:)-90255`` only along stored 
-properties of child features. Such key paths are simple getters, and so not have a problem with
-performance. If you are using a computed property in a scope, then reconsider if that could instead
-be done along a plain, stored property and moving the computed logic into the child view. The 
-further you push the computation towards the leaf nodes of your application, the less performance
-problems you will see.
+To fix the problem we recommend using ``Store/scope(_:action:)`` only along stored properties of
+child features. Such key paths are simple getters, and so not have a problem with performance. If
+you are using a computed property in a scope, then reconsider if that could instead be done along a
+plain, stored property and moving the computed logic into the child view. The further you push the
+computation towards the leaf nodes of your application, the less performance problems you will see.
 
 ---
 
@@ -5766,7 +5765,7 @@ struct RootView: View {
 
   var body: some View {
     NavigationStack(
-      path: $store.scope(state: \.path, action: \.path)
+      path: $store.scope(\.path, action: \.path)
     ) {
       // Root view of the navigation stack
     } destination: { store in
@@ -6053,7 +6052,7 @@ struct Feature {
     enum State: Equatable { case counter(CounterFeature.State) }
     enum Action { case counter(CounterFeature.Action) }
     var body: some ReducerOf<Self> {
-      Scope(state: \.counter, action: \.counter) { CounterFeature() }
+      Scope(\.counter, action: \.counter) { CounterFeature() }
     }
   }
 
@@ -6316,7 +6315,7 @@ class AppController: NavigationStackController {
   convenience init(store: StoreOf<AppFeature>) {
     @UIBindable var store = store
 
-    self.init(path: $store.scope(state: \.path, action: \.path)) {
+    self.init(path: $store.scope(\.path, action: \.path)) {
       RootViewController(store: store)
     } destination: { store in 
       switch store.case {
@@ -7446,7 +7445,7 @@ struct InventoryView: View {
       // ...
     }
     .sheet(
-      item: $store.scope(state: \.addItem, action: \.addItem)
+      item: $store.scope(\.addItem, action: \.addItem)
     ) { store in
       ItemFormView(store: store)
     }
@@ -7455,7 +7454,7 @@ struct InventoryView: View {
 ```
 
 > Note: We use SwiftUI's `@Bindable` property wrapper to produce a binding to a store, which can be
-> further scoped using ``SwiftUI/Binding/scope(state:action:fileID:filePath:line:column:)``.
+> further scoped using ``SwiftUI/Binding/scope(_:action:fileID:filePath:line:column:)``.
 
 With those few steps completed the domains and views of the parent and child features are now
 integrated together, and when the `addItem` state flips to a non-`nil` value the sheet will be
@@ -7616,7 +7615,8 @@ struct InventoryView: View {
 ```
 
 And then in the `body` of the view you can use the
-``SwiftUI/Binding/scope(state:action:fileID:filePath:line:column:)`` operator to derive bindings from `$store`:
+``SwiftUI/Binding/scope(_:action:fileID:filePath:line:column:)`` operator to derive bindings from
+`$store`:
 
 ```swift
 var body: some View {
@@ -7624,17 +7624,17 @@ var body: some View {
     // ...
   }
   .sheet(
-    item: $store.scope(state: \.destination, action: \.destination).addItem
+    item: $store.scope(\.destination, action: \.destination).addItem
   ) { store in 
     AddFeatureView(store: store)
   }
   .popover(
-    item: $store.scope(state: \.destination, action: \.destination).editItem
+    item: $store.scope(\.destination, action: \.destination).editItem
   ) { store in 
     EditFeatureView(store: store)
   }
   .navigationDestination(
-    item: $store.scope(state: \.destination, action: \.destination).detailItem
+    item: $store.scope(\.destination, action: \.destination).detailItem
   ) { store in 
     DetailFeatureView(store: store)
   }
@@ -7651,8 +7651,8 @@ drill-down will occur immediately.
 One of the best features of tree-based navigation is that it unifies all forms of navigation with a
 single style of API. First of all, regardless of the type of navigation you plan on performing,
 integrating the parent and child features together can be done with the single
-``Reducer/ifLet(_:action:destination:fileID:filePath:line:column:)-4ub6q`` operator. This one single API services
-all forms of optional-driven navigation.
+``Reducer/ifLet(_:action:destination:fileID:filePath:line:column:)-4ub6q`` operator. This one single
+API services all forms of optional-driven navigation.
 
 And then in the view, whether you are wanting to perform a drill-down, show a sheet, display
 an alert, or even show a custom navigation component, all you need to do is invoke an API that
@@ -7666,25 +7666,25 @@ forms of navigation could be as simple as this:
 
 ```swift
 .sheet(
-  item: $store.scope(state: \.addItem, action: \.addItem)
+  item: $store.scope(\.addItem, action: \.addItem)
 ) { store in 
   AddFeatureView(store: store)
 }
 .popover(
-  item: $store.scope(state: \.editItem, action: \.editItem)
+  item: $store.scope(\.editItem, action: \.editItem)
 ) { store in 
   EditFeatureView(store: store)
 }
 .navigationDestination(
-  item: $store.scope(state: \.detailItem, action: \.detailItem)
+  item: $store.scope(\.detailItem, action: \.detailItem)
 ) { store in 
   DetailFeatureView(store: store)
 }
 .alert(
-  $store.scope(state: \.alert, action: \.alert)
+  $store.scope(\.alert, action: \.alert)
 )
 .confirmationDialog(
-  $store.scope(state: \.confirmationDialog, action: \.confirmationDialog)
+  $store.scope(\.confirmationDialog, action: \.confirmationDialog)
 )
 ```
 
@@ -8996,13 +8996,13 @@ enum of options:
 
 ```swift
 .sheet(
-  item: $store.scope(state: \.destination?.editForm, action: \.destination.editForm)
+  item: $store.scope(\.destination?.editForm, action: \.destination.editForm)
 ) { store in
   FormView(store: store)
 }
 ```
 
-The syntax `state: \.destination?.editForm` is only possible due to both `@dynamicMemberLookup` and
+The syntax `\.destination?.editForm` is only possible due to both `@dynamicMemberLookup` and
 `@CasePathable` being applied to the `State` enum.
 
 ### Automatic fulfillment of reducer requirements
@@ -9050,13 +9050,13 @@ struct Destination {
     case edit(EditFeature.Action)
   }
   var body: some ReducerOf<Self> {
-    Scope(state: \.add, action: \.add) {
+    Scope(\.add, action: \.add) {
       FormFeature()
     }
-    Scope(state: \.detail, action: \.detail) {
+    Scope(\.detail, action: \.detail) {
       DetailFeature()
     }
-    Scope(state: \.edit, action: \.edit) {
+    Scope(\.edit, action: \.edit) {
       EditFeature()
     }
   }
@@ -9115,7 +9115,7 @@ In the last trailing closure you can use the ``Store/case`` computed property to
 `Path.State` enum and extract out a store for each case:
 
 ```swift
-NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+NavigationStack(path: $store.scope(\.path, action: \.path)) {
   // Root view
 } destination: { store in
   switch store.case {
@@ -9159,7 +9159,7 @@ reason we have to ignore it from some of `@Reducer`'s macro expansion.
 Then, to present a view from this case one can do:
 
 ```swift
-.sheet(item: $store.scope(state: \.destination?.item, action: \.destination.item)) { store in
+.sheet(item: $store.scope(\.destination?.item, action: \.destination.item)) { store in
   ItemView(item: store.withState { $0 })
 }
 ```
@@ -9554,9 +9554,8 @@ xcodebuild -skipMacroValidation …
 
 ### Scoping stores
 
-- ``scope(state:action:)-90255``
-- ``scope(state:action:fileID:filePath:line:column:)-3yvuf``
-- ``scope(state:action:fileID:filePath:line:column:)-2ym6k``
+- ``scope(_:action:)``
+- ``scope(_:action:fileID:filePath:line:column:)``
 - ``case``
 
 ### Scoping store bindings
@@ -9618,34 +9617,34 @@ controls and drive navigation.
 
 ### Navigation bindings
 
-- ``SwiftUI/Binding/scope(state:action:fileID:filePath:line:column:)``
-- ``SwiftUI/Binding/scope(state:action:)-35r82``
+- ``SwiftUI/Binding/scope(_:action:fileID:filePath:line:column:)``
+- ``SwiftUI/Binding/scope(_:action:)``
 
 ---
 
 ### SwiftUIBindingScopeForEach
 
-# ``SwiftUI/Binding/scope(state:action:)-35r82``
+# ``SwiftUI/Binding/scope(_:action:)``
 
 ## Topics
 
 ### Bindable
 
-- ``SwiftUI/Bindable/scope(state:action:)``
-- ``Perception/Bindable/scope(state:action:)``
+- ``SwiftUI/Bindable/scope(_:action:)``
+- ``Perception/Bindable/scope(_:action:)``
 
 ---
 
 ### SwiftUIBindingScopeIfLet
 
-# ``SwiftUI/Binding/scope(state:action:fileID:filePath:line:column:)``
+# ``SwiftUI/Binding/scope(_:action:fileID:filePath:line:column:)``
 
 ## Topics
 
 ### Bindable
 
-- ``SwiftUI/Bindable/scope(state:action:fileID:line:)``
-- ``Perception/Bindable/scope(state:action:fileID:line:)``
+- ``SwiftUI/Bindable/scope(_:action:fileID:line:)``
+- ``Perception/Bindable/scope(_:action:fileID:line:)``
 
 ---
 
@@ -9685,11 +9684,11 @@ designed with SwiftUI in mind, and comes with many powerful tools to integrate i
 
 ### Presentation
 
-- ``SwiftUI/Binding/scope(state:action:fileID:filePath:line:column:)``
+- ``SwiftUI/Binding/scope(_:action:fileID:filePath:line:column:)``
 
 ### Navigation stacks and links
 
-- ``SwiftUI/Binding/scope(state:action:)-35r82``
+- ``SwiftUI/Binding/scope(_:action:)-35r82``
 - ``SwiftUI/NavigationStack/init(path:root:destination:fileID:filePath:line:column:)``
 - ``SwiftUI/NavigationLink/init(state:label:fileID:filePath:line:column:)``
 
