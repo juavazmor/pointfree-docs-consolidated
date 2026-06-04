@@ -1,7 +1,7 @@
 # pointfreeco/swift-dependencies Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-dependencies
-Generated on: Fri May 29 07:24:12 UTC 2026
+Generated on: Thu Jun  4 07:41:29 UTC 2026
 
 ## Documentation from Sources/Dependencies/Documentation.docc
 
@@ -812,7 +812,7 @@ func testFeature() {
 }
 ```
 
-[unimplemented-docs]: https://pointfreeco.github.io/xctest-dynamic-overlay/main/documentation/xctestdynamicoverlay/unimplemented(_:fileid:line:)-5098a
+[unimplemented-docs]: https://swiftpackageindex.com/pointfreeco/swift-issue-reporting/main/documentation/issuereporting/unimplemented(_:fileid:filepath:function:line:column:)
 [issue-reporting-gh]: http://github.com/pointfreeco/xctest-dynamic-overlay
 
 ## Topics
@@ -1082,22 +1082,25 @@ That is all it takes to start using controllable dependencies in your features. 
 bit of upfront work done you can start to take advantage of the library's powers.
 
 For example, you can easily control these dependencies in tests. If you want to test the logic
-inside the `addButtonTapped` method, you can use the ``withDependencies(_:operation:)-4uz6m``
-function to override any dependencies for the scope of one single test. It's as easy as 1-2-3:
+inside the `addButtonTapped` method, you can use the `.dependencies` test trait
+to override any dependencies for the scope of one single test. It's as easy as 1-2-3:
 
 ```swift
-@Test
-func add() async throws {
-  let model = withDependencies {
-    // 1️⃣ Override any dependencies that your feature uses.
+import Dependencies
+import DependenciesTestSupport
+import Testing
+
+@Test(
+  // 1️⃣ Override any dependencies that your feature uses.
+  .dependencies {
     $0.clock = .immediate
     $0.date.now = Date(timeIntervalSinceReferenceDate: 1234567890)
     $0.uuid = .incrementing
-  } operation: {
-    // 2️⃣ Construct the feature's model
-    FeatureModel()
   }
-
+)
+func add() async throws {
+  // 2️⃣ Construct the feature's model
+  let model = FeatureModel()
   // 3️⃣ The model now executes in a controlled environment of dependencies,
   //    and so we can make assertions against its behavior.
   try await model.addButtonTapped()
@@ -1146,7 +1149,7 @@ can do. You can learn more in depth about <doc:WhatAreDependencies> as well as
 there are more advanced topics to explore, such as <doc:DesigningDependencies>,
 <doc:OverridingDependencies>, <doc:Lifetimes> and <doc:SingleEntryPointSystems>.
 
-[immediate-clock-docs]: https://pointfreeco.github.io/swift-clocks/main/documentation/clocks/immediateclock
+[immediate-clock-docs]: https://swiftpackageindex.com/pointfreeco/swift-clocks/main/documentation/clocks/immediateclock
 
 ---
 
@@ -1164,6 +1167,45 @@ when you want to register your own dependencies with the library so that you can
 ``Dependency`` property wrapper. There are a couple ways to achieve this, and the process is quite
 similar to registering a value with [the environment][environment-values-docs] in SwiftUI.
 
+## The @DependencyEntry macro
+
+This simplest way to register a dependency is using the `@DependencyEntry` macro. Simply extend
+the ``DependencyValues`` type and apply the macro on a mutable property with a default value:
+
+```swift
+import Dependencies
+import DependenciesMacros
+
+extension DependencyValues {
+  @DependencyEntry
+  var apiClient: any APIClient = MockAPIClient()
+}
+```
+
+This will create a private inner type that conforms to the ``TestDependencyKey`` protocol and 
+provides a ``TestDependencyKey/testValue`` of `MockAPIClient`.
+
+If it is appropriate to also define the ``DependencyKey/liveValue`` in the same module as the 
+``TestDependencyKey/testValue`` then you can do so by providing a `liveValue` argument:
+
+```swift
+import Dependencies
+import DependenciesMacros
+
+extension DependencyValues {
+  @DependencyEntry(liveValue: LiveAPIClient())
+  var apiClient: any APIClient = MockAPIClient()
+}
+```
+
+However, if the live implementation of the dependency is only appropriate to define at the entry
+point of the app, or if you need to keep the live implementation separate from the dependency 
+interface, you will not provide this argument. And instead you will employ the techniques in 
+<doc:LivePreviewTest#Separating-interface-and-implementation>.
+
+## Manual conformance to DependencyKey
+
+You can also conform to ``TestDependencyKey`` and ``DependencyKey`` directly. 
 First you create a ``DependencyKey`` protocol conformance. The minimum implementation you must
 provide is a ``DependencyKey/liveValue``, which is the value used when running the app in a
 simulator or on device, and so it's appropriate for it to actually make network requests to an
@@ -1931,17 +1973,19 @@ Then, all 3 dependencies can easily be overridden with deterministic versions wh
 feature:
 
 ```swift
-@MainActor
-@Test
-func todos() async {
-  let model = withDependencies {
+import Dependencies
+import DependenciesTestSupport
+import Testing
+
+@Test(
+  .dependencies {
     $0.continuousClock = .immediate
     $0.date.now = Date(timeIntervalSinceReferenceDate: 1234567890)
     $0.uuid = .incrementing
-  } operation: {
-    TodosModel()
   }
-
+)
+func todos() async {
+  let model = TodosModel()
   // Invoke methods on `model` and make assertions...
 }
 ```
@@ -2070,18 +2114,21 @@ This will cause the message to appear immediately. No need to wait 10 seconds.
 > Tip: We have a [series of episodes][clocks-collection] discussing the `Clock` protocol in depth
 and showing how it can be used to control time-based asynchrony.
 
-Further, in tests you can also override the clock dependency to use an immediate clock, also using
-the ``withDependencies(_:operation:)-4uz6m`` helper:
+Further, in tests you can also override the clock dependency to use an immediate clock, using
+the `.dependencies` test trait:
 
 ```swift
-@Test
-func message() async {
-  let model = withDependencies {
-    $0.continuousClock = .immediate
-  } operation: {
-    FeatureModel()
-  }
+import Dependencies
+import DependenciesTestSupport
+import Testing
 
+@Test(
+  .dependencies {
+    $0.continuousClock = .immediate
+  }
+)
+func message() async {
+  let model = FeatureModel()
   #expect(model.message == nil)
   await model.onAppear()
   #expect(model.message == "Welcome!")
