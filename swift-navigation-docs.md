@@ -1,7 +1,7 @@
 # pointfreeco/swift-navigation Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-navigation
-Generated on: Fri May 29 07:24:12 UTC 2026
+Generated on: Tue Jun  9 07:18:07 UTC 2026
 
 ## Documentation from Sources/AppKitNavigation/Documentation.docc
 
