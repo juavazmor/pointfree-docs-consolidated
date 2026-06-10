@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Tue Jun  9 07:18:11 UTC 2026
+Generated on: Wed Jun 10 07:32:40 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -171,27 +171,27 @@ struct Settings {
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-      case let digestChanged(digest):
+      case let .digestChanged(digest):
         state.digest = digest
         return .none
 
-      case let displayNameChanged(displayName):
+      case let .displayNameChanged(displayName):
         state.displayName = displayName
         return .none
 
-      case let enableNotificationsChanged(isOn):
+      case let .enableNotificationsChanged(isOn):
         state.enableNotifications = isOn
         return .none
 
-      case let protectMyPostsChanged(isOn):
+      case let .protectMyPostsChanged(isOn):
         state.protectMyPosts = isOn
         return .none
 
-      case let sendEmailNotificationsChanged(isOn):
+      case let .sendEmailNotificationsChanged(isOn):
         state.sendEmailNotifications = isOn
         return .none
 
-      case let sendMobileNotificationsChanged(isOn):
+      case let .sendMobileNotificationsChanged(isOn):
         state.sendMobileNotifications = isOn
         return .none
       }
@@ -252,7 +252,7 @@ Then bindings can be derived from the store using familiar `$` syntax:
 
 ```swift
 TextField("Display name", text: $store.displayName)
-Toggle("Notifications", text: $store.enableNotifications)
+Toggle("Notifications", isOn: $store.enableNotifications)
 // ...
 ```
 
@@ -264,7 +264,7 @@ var body: some Reducer<State, Action> {
   BindingReducer()
 
   Reduce { state, action in
-    switch action
+    switch action {
     case .binding(\.displayName):
       // Validate display name
   
@@ -309,7 +309,7 @@ store.send(\.binding.displayName, "Blob") {
 }
 store.send(\.binding.protectMyPosts, true) {
   $0.protectMyPosts = true
-)
+}
 ```
 
 ---
@@ -4466,7 +4466,7 @@ use of scope:
 }
 ```
 
-All of these examples are how ``Store/scope(state:action:)-90255`` is intended to be used, and you
+All of these examples are how ``Store/scope(_:action:)`` is intended to be used, and you
 can continue using it in this way with no performance concerns.
 
 Where performance can become a concern is when using `scope` on _computed_ properties rather than
