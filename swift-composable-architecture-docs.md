@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Wed Jun 10 07:32:40 UTC 2026
+Generated on: Thu Jun 11 07:45:09 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -4704,7 +4704,7 @@ It works similarly to the in-memory sharing discussed above, but it requires a U
 on disk, as well as a default value that will be used when there is no data in the file system:
 
 ```swift
-@Shared(.fileStorage(URL(/* ... */)) var users: [User] = []
+@Shared(.fileStorage(URL(/* ... */))) var users: [User] = []
 ```
 
 This strategy works by serializing your value to JSON to save to disk, and then deserializing JSON
@@ -5170,7 +5170,7 @@ section above to use app storage:
 struct State: Equatable {
   @Shared(.appStorage("count")) var count: Int
 }
-````
+```
 
 …then the test for this feature can be written in the same way as before and will still pass.
 
@@ -5385,7 +5385,7 @@ like this:
 
 ```swift
 extension URL {
-  static let users = URL(/* ... */))
+  static let users = URL(/* ... */)
 }
 
 @Shared(.fileStorage(.users)) var users: [User] = []
@@ -5618,7 +5618,7 @@ await store.send(.tap)
 
 // ❌ Expected state to change, but no change occurred.
 await store.receive(.response) {
-  $0.$shared.withLock { $0 = true }
+  $0.$bool.withLock { $0 = true }
 }
 ```
 
@@ -5628,7 +5628,7 @@ must always assert against shared state mutations in the first action:
 
 ```swift
 await store.send(.tap) {  // ✅
-  $0.$shared.withLock { $0 = true }
+  $0.$bool.withLock { $0 = true }
 }
 
 // ❌ Expected state to change, but no change occurred.
@@ -6048,19 +6048,15 @@ struct Feature {
   }
 
   @Reducer  
-  struct Path {
-    enum State: Equatable { case counter(CounterFeature.State) }
-    enum Action { case counter(CounterFeature.Action) }
-    var body: some ReducerOf<Self> {
-      Scope(\.counter, action: \.counter) { CounterFeature() }
-    }
+  enum Path {
+    case counter(CounterFeature)
   }
 
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       // Logic and behavior for core feature.
     }
-    .forEach(\.path, action: \.path) { Path() }
+    .forEach(\.path, action: \.path) { Path.body }
   }
 }
 ```
@@ -6075,7 +6071,7 @@ func dismissal() {
   let store = TestStore(
     initialState: Feature.State(
       path: StackState([
-        CounterFeature.State(count: 3)
+        .counter(CounterFeature.State(count: 3))
       ])
     )
   ) {
@@ -6198,7 +6194,7 @@ func dismissal() {
   let store = TestStore(
     initialState: Feature.State(
       path: StackState([
-        CounterFeature.State(count: 3)
+        .counter(CounterFeature.State(count: 3))
       ])
     )
   ) {

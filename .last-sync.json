@@ -1,7 +1,7 @@
 {
   "pointfreeco/swift-case-paths": "1957d1cbc9c184b2958db7b51e86b77126010aa3",
   "pointfreeco/swift-navigation": "68687ea9d2986d0692e189b2b813b9244cf9be7e",
-  "pointfreeco/sqlite-data": "98fa1def404b6ea7355bcdbe9b804bd370f5fc0e",
+  "pointfreeco/sqlite-data": "0c79d7a5748fc6d9ce7a1ba2b50f31b175305049",
   "pointfreeco/swift-dependencies": "16f7dd14ee28d04617090f2a73198b8b316ffa12",
-  "pointfreeco/swift-composable-architecture": "2a5434e29649cd06dcf61993a73a3f7fe4f8c00a"
+  "pointfreeco/swift-composable-architecture": "f17e2c5730681ee2a4e0c713f8951416d3e1ea9e"
 }
