@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Thu Jun 11 07:45:09 UTC 2026
+Generated on: Fri Jun 12 07:41:08 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -4289,7 +4289,7 @@ store.send(.toggleChanged) {
   $0.isEnabled = true
   // Assert on shared logic
 }
-store.send(.textFieldChanged("Hello") {
+store.send(.textFieldChanged("Hello")) {
   $0.description = "Hello"
   // Assert on shared logic
 }
@@ -7573,7 +7573,7 @@ struct InventoryFeature {
 }
 ```
 
-> Note: It's not necessary to specify `Destination` in a trialing closure of `ifLet` because it can
+> Note: It's not necessary to specify `Destination` in a trailing closure of `ifLet` because it can
 > automatically be inferred due to how the `Destination` enum was defined with the ``Reducer()``
 > macro.
 
