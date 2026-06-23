@@ -1,7 +1,7 @@
 # pointfreeco/swift-navigation Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-navigation
-Generated on: Sat Jun 20 07:23:31 UTC 2026
+Generated on: Tue Jun 23 07:18:36 UTC 2026
 
 ## Documentation from Sources/AppKitNavigation/Documentation.docc
 
@@ -399,6 +399,8 @@ SwiftUI, UIKit, AppKit, and even non-Apple platforms.
 
 - ``UIBindable``
 - ``UIBinding``
+- ``CaseBindable()``
+- ``CaseBindable``
 
 ### Attaching data to mutations
 
@@ -406,6 +408,7 @@ SwiftUI, UIKit, AppKit, and even non-Apple platforms.
 - ``withUITransaction(_:_:_:)``
 - ``UITransaction``
 - ``UITransactionKey``
+- ``UITransactionEntry()``
 
 ### Stack-based navigation
 
