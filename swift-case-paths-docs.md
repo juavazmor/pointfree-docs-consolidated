@@ -1,7 +1,7 @@
 # pointfreeco/swift-case-paths Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-case-paths
-Generated on: Fri Jun 19 07:55:35 UTC 2026
+Generated on: Sat Jun 27 07:08:23 UTC 2026
 
 ## Documentation from Sources/CasePaths/Documentation.docc
 
@@ -212,6 +212,7 @@ other non-core functionality.
 
 ### Case properties
 
+- ``case``
 - ``is(_:)``
 - ``subscript(dynamicMember:)-emck``
 - ``subscript(dynamicMember:)-dm5y``

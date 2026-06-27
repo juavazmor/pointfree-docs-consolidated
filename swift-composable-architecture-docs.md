@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Fri Jun 12 07:41:08 UTC 2026
+Generated on: Sat Jun 27 07:08:25 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -522,7 +522,7 @@ Modeling user actions with an enum rather than methods defined on some object is
   }
   ```
 
-  Again this is only possible thanks to the data type of all actions in the feature. See  for more information on testing in TCA.
+  Again this is only possible thanks to the data type of all actions in the feature. See the [testing article][testing-article] for more information.
 
 <!-- TODO: Navigation tools? -->
 
@@ -6565,7 +6565,7 @@ on computed properties you might have defined on your state. For example, if `St
 computed property for checking if `count` was prime, we could test it like so:
 
 ```swift
-store.send(.incrementButtonTapped) {
+await store.send(.incrementButtonTapped) {
   $0.count = 3
 }
 XCTAssertTrue(store.state.isPrime)
@@ -6577,7 +6577,7 @@ prevents you from being able to use an escape hatch to get around needing to act
 state mutation, like so:
 
 ```swift
-store.send(.incrementButtonTapped) {
+await store.send(.incrementButtonTapped) {
   $0 = store.state  // ❌ store.state is the previous, not current, state.
 }
 ```
@@ -6981,7 +6981,7 @@ let store = TestStore(/* ... */)
 // ℹ️ "on" is the default so technically this is not needed
 store.exhaustivity = .on
 
-store.send(.buttonTapped) {
+await store.send(.buttonTapped) {
   $0  // Represents the state *before* the action was sent
 }
 ```
@@ -6996,7 +6996,7 @@ trailing closure of `send` represents the state _after_ the action was sent:
 let store = TestStore(/* ... */)
 store.exhaustivity = .off
 
-store.send(.buttonTapped) {
+await store.send(.buttonTapped) {
   $0  // Represents the state *after* the action was sent
 }
 ```
