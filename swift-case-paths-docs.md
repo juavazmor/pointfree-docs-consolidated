@@ -1,7 +1,7 @@
 # pointfreeco/swift-case-paths Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-case-paths
-Generated on: Sat Jun 27 07:08:23 UTC 2026
+Generated on: Mon Jun 29 07:47:54 UTC 2026
 
 ## Documentation from Sources/CasePaths/Documentation.docc
 
