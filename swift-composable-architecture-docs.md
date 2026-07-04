@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Sat Jun 27 07:08:25 UTC 2026
+Generated on: Sat Jul  4 08:34:17 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
