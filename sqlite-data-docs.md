@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Tue Jul 14 08:00:27 UTC 2026
+Generated on: Thu Jul 16 08:09:35 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -3427,9 +3427,14 @@ It is also important to prepare the database in Xcode previews. This can be done
 }
 ```
 
-And similarly, in tests, this can be done using the `.dependency` testing trait:
+And similarly, in tests, this can be done using the `.dependency` testing trait 
+from [DependenciesTestSupport](https://github.com/pointfreeco/swift-dependencies):
 
 ```swift
+import DependenciesTestSupport
+import SQLiteData
+import Testing
+
 @Test(.dependency(\.defaultDatabase, try appDatabase())
 func feature() {
   // ...
