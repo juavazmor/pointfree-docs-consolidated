@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Thu Jul 16 08:09:36 UTC 2026
+Generated on: Wed Jul 22 08:25:15 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -5911,7 +5911,7 @@ methods, such as ``StackState/popLast()``, ``StackState/pop(from:)`` and more:
 
 ```swift
 case .closeButtonTapped:
-  state.popLast()
+  state.path.popLast()
   return .none
 ```
 
@@ -6075,7 +6075,7 @@ func dismissal() {
       ])
     )
   ) {
-    CounterFeature()
+    Feature()
   }
 }
 ```
@@ -6198,7 +6198,7 @@ func dismissal() {
       ])
     )
   ) {
-    CounterFeature()
+    Feature()
   }
   store.exhaustivity = .off
 
@@ -7921,7 +7921,7 @@ func dismissal() {
       counter: CounterFeature.State(count: 3)
     )
   ) {
-    CounterFeature()
+    Feature()
   }
 }
 ```
@@ -7977,7 +7977,7 @@ func dismissal() {
       counter: CounterFeature.State(count: 3)
     )
   ) {
-    CounterFeature()
+    Feature()
   }
   store.exhaustivity = .off
 
