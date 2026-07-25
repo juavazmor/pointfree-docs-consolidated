@@ -1,7 +1,7 @@
 # pointfreeco/swift-composable-architecture Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-composable-architecture
-Generated on: Wed Jul 22 08:25:15 UTC 2026
+Generated on: Sat Jul 25 08:03:15 UTC 2026
 
 ## Documentation from Sources/ComposableArchitecture/Documentation.docc
 
@@ -27,6 +27,7 @@ state:
 ```swift
 @Reducer
 struct Settings {
+  @ObservableState
   struct State: Equatable {
     var isHapticsEnabled = true
     // ...
@@ -42,6 +43,7 @@ define a corresponding action that can be sent updates:
 ```swift
 @Reducer
 struct Settings {
+  @ObservableState
   struct State: Equatable { /* ... */ }
 
   enum Action { 
@@ -58,6 +60,7 @@ When the reducer handles this action, it can update state accordingly:
 ```swift
 @Reducer
 struct Settings {
+  @ObservableState
   struct State: Equatable { /* ... */ }
   enum Action { /* ... */ }
 
