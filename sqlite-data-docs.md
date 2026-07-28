@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Sat Jul 25 08:03:14 UTC 2026
+Generated on: Tue Jul 28 08:30:17 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -2731,6 +2731,39 @@ and its value names each section:
   }
 )
 var reminders
+```
+
+Sections are not limited to `@FetchAll`. Any query can be fetched into a
+``ResultsSectionCollection`` directly, which is useful when defining a custom
+``FetchKeyRequest``:
+
+```swift
+struct RemindersByCategory: FetchKeyRequest {
+  func fetch(_ db: Database) throws -> ResultsSectionCollection<Reminder, String?> {
+    try Reminder
+      .order(by: \.title)
+      .fetchAll(db, sectionBy: \.category)
+  }
+}
+```
+
+The request can be observed with ``Fetch``, and its sections drive a list just like
+``FetchAll/sections`` does:
+
+```swift
+@Fetch(RemindersByCategory()) var sections = ResultsSectionCollection<Reminder, String?>()
+```
+
+And while `@FetchAll` always names its sections with strings, this form can section by any
+`Hashable` value the database can decode, and supports joins and custom selections:
+
+```swift
+try Reminder
+  .order(by: \.title)
+  .join(RemindersList.all) { $0.listID.eq($1.id) }
+  .select { ReminderRow.Columns(title: $0.title, list: $1.name) }
+  .fetchAll(db, sectionBy: { $1.id })
+// ResultsSectionCollection<ReminderRow, Int?>
 ```
 
 [sq-safe-sql-strings]: https://swiftpackageindex.com/pointfreeco/swift-structured-queries/~/documentation/structuredqueriescore/safesqlstrings
