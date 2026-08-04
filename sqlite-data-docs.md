@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Thu Jul 30 08:22:40 UTC 2026
+Generated on: Tue Aug  4 08:32:58 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -2426,12 +2426,9 @@ information about CloudKit synchronization, see <doc:CloudKitSync>.
 
 ### Supported Apple platforms
 
-SwiftData and the `@Query` macro require iOS 17, macOS 14, tvOS 17, watchOS 10 and higher, and
-some newer features require even more recent versions of iOS.
-
-Meanwhile, SQLiteData has a broad set of deployment targets supporting all the way back to iOS 13,
-macOS 10.15, tvOS 13, and watchOS 6. This means you can use these tools on essentially any
-application today with no restrictions.
+SQLiteData has a broad set of deployment targets supporting all the way back to the iOS 16 family
+of releases. This means you can use these tools on essentially any application today with no
+restrictions.
 
 ---
 
