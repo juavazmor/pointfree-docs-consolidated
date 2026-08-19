@@ -1,7 +1,7 @@
 # pointfreeco/swift-dependencies Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-dependencies
-Generated on: Sat Aug  8 06:49:22 UTC 2026
+Generated on: Wed Aug 19 06:39:06 UTC 2026
 
 ## Documentation from Sources/Dependencies/Documentation.docc
 
@@ -468,10 +468,11 @@ feature behaves in very specific states. For example, if you wanted to see how y
 when the `fetchUser` endpoint throws an error, you can update the preview like so:
 
 ```swift
-#Preview {
-  let _ = prepareDependencies {
+#Preview(
+  traits: .dependencies {
     $0.apiClient.fetchUser = { _ in throw SomeError() }
   }
+) {
   FeatureView(model: FeatureModel())
 }
 ```
@@ -683,40 +684,46 @@ data provided to it, making it easier for you to iterate on your feature's logic
 
 You can also always override dependencies for the preview if you want to test out a specific 
 configuration of data. For example, if you want to test the empty state of your feature when the 
-API client returns an empty array, you can do so like this:
+API client returns an empty array, you can use the 
+``DeveloperToolsSupport/PreviewTrait/dependencies(_:)`` preview trait:
 
 ```swift
-struct Feature_Previews: PreviewProvider {
-  static var previews: some View {
-    FeatureView(
-      model: withDependencies {
-        $0.apiClient.fetchUsers = { _ in [] }
-      } operation: {
-        FeatureModel()
-      }
-    )
+#Preview(
+  traits: .dependencies {
+    $0.apiClient.fetchUsers = { _ in [] }
   }
+) {
+  FeatureView(model: FeatureModel())
 }
 ```
 
 Or if you want to preview how your feature deals with errors returned from the API:
 
 ```swift
-struct Feature_Previews: PreviewProvider {
-  static var previews: some View {
-    FeatureView(
-      model: withDependencies {
-        $0.apiClient.fetchUser = { _ in
-          struct SomeError: Error {}
-          throw SomeError()
-        }
-      } operation: {
-        FeatureModel()
-      }
-    )
+#Preview(
+  traits: .dependencies {
+    $0.apiClient.fetchUser = { _ in
+      struct SomeError: Error {}
+      throw SomeError()
+    }
   }
+) {
+  FeatureView(model: FeatureModel())
 }
 ```
+
+> Note: The `.dependencies` preview trait requires iOS 18, macOS 15, tvOS 18, watchOS 11, or
+> visionOS 2. If your deployment target is earlier than that, you can invoke
+> ``prepareDependencies(_:)`` from the body of the preview, instead:
+>
+> ```swift
+> #Preview {
+>   let _ = prepareDependencies {
+>     $0.apiClient.fetchUsers = { _ in [] }
+>   }
+>   FeatureView(model: FeatureModel())
+> }
+> ```
 
 ## Separating interface and implementation
 
@@ -1126,12 +1133,11 @@ and `UUID()`, and we'd have to wait for real world time to pass, making the test
 But, controllable dependencies aren't only useful for tests. They can also be used in Xcode
 previews. Suppose the feature above makes use of a clock to sleep for an amount of time before
 something happens in the view. If you don't want to literally wait for time to pass in order to see
-how the view changes, you can override the clock dependency to be an "immediate" clock using
-``prepareDependencies(_:)``:
+how the view changes, you can override the clock dependency to be an "immediate" clock using the
+``DeveloperToolsSupport/PreviewTrait/dependencies(_:)`` preview trait:
 
 ```swift
-#Preview {
-  let _ = prepareDependencies { $0.continuousClock = ImmediateClock() }
+#Preview(traits: .dependencies { $0.continuousClock = ImmediateClock() }) {
   // All access of '@Dependency(\.continuousClock)' in this preview will
   // use an immediate clock.
   FeatureView(model: FeatureModel())
@@ -2098,13 +2104,12 @@ final class FeatureModel {
 
 That small change makes this feature much friendlier to Xcode previews and testing.
 
-For previews, you can use ``prepareDependencies(_:)`` to override the
-``DependencyValues/continuousClock`` dependency to be an "immediate" clock, which is a clock that
-does not actually sleep for any amount of time:
+For previews, you can use the ``DeveloperToolsSupport/PreviewTrait/dependencies(_:)`` preview
+trait to override the ``DependencyValues/continuousClock`` dependency to be an "immediate" clock,
+which is a clock that does not actually sleep for any amount of time:
 
 ```swift
-#Preview {
-  let _ = prepareDependencies { $0.continuousClock = ImmediateClock() }
+#Preview(traits: .dependencies { $0.continuousClock = ImmediateClock() }) {
   FeatureView(model: FeatureModel())
 }
 ```
