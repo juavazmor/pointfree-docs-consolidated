@@ -1,7 +1,7 @@
 # pointfreeco/swift-dependencies Documentation
 
 Auto-generated from https://github.com/pointfreeco/swift-dependencies
-Generated on: Wed Aug 19 06:39:06 UTC 2026
+Generated on: Sat Aug 22 06:35:38 UTC 2026
 
 ## Documentation from Sources/Dependencies/Documentation.docc
 
@@ -2306,6 +2306,7 @@ This library addresses all of the points above, and much, _much_ more.
 - ``notificationCenter``
 - ``openURL``
 - ``precondition``
+- ``preferredLocales``
 - ``suspendingClock``
 - ``timeZone``
 - ``urlSession``
