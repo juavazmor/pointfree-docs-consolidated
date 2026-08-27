@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Thu Aug 20 06:41:08 UTC 2026
+Generated on: Thu Aug 27 17:19:36 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
