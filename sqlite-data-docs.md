@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Sat Aug 29 12:17:53 UTC 2026
+Generated on: Tue Sep  1 11:07:01 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -3835,6 +3835,13 @@ a future version of SQLiteData.
 
 - ``add(function:)``
 - ``remove(function:)``
+
+### User-defined collations
+
+- ``add(collation:)``
+- ``remove(collation:)``
+- ``StructuredQueriesCore/Collation/canonical``
+- ``CanonicalCollation``
 
 ### Querying CloudKit metadata
 
