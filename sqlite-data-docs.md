@@ -1,7 +1,7 @@
 # pointfreeco/sqlite-data Documentation
 
 Auto-generated from https://github.com/pointfreeco/sqlite-data
-Generated on: Sat Oct 10 11:55:26 UTC 2026
+Generated on: Wed Oct 14 11:12:08 UTC 2026
 
 ## Documentation from Sources/SQLiteData/Documentation.docc
 
@@ -1355,13 +1355,14 @@ struct MySuite {
 }
 ```
 
-And in previews you can use it like so:
+And in previews you can use it with the `.dependencies` preview trait like so:
 
 ```swift
-#Preview {
-  try! prepareDependencies {
-    try! $0.bootstrapDatabase()
+#Preview(
+  traits: .dependencies {
+    try $0.bootstrapDatabase()
   }
+) {
   // ...
 }
 ```
@@ -3496,16 +3497,52 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 And if using something besides UIKit or SwiftUI, then simply set the `defaultDatabase` as early as
 possible in the application's lifecycle.
 
-It is also important to prepare the database in Xcode previews. This can be done like so:
+It is also important to prepare the database in Xcode previews. This can be done using the
+`.dependencies` preview trait from the
+[Dependencies](https://github.com/pointfreeco/swift-dependencies) library, which is automatically
+included with SQLiteData:
 
 ```swift
-#Preview {
-  let _ = prepareDependencies {
-    $0.defaultDatabase = try! appDatabase()
+import Dependencies 
+import SQLiteData
+
+#Preview(
+  traits: .dependencies {
+    $0.defaultDatabase = try appDatabase()
   }
+) {
   // ...
 }
 ```
+
+> Note: The `.dependencies` preview trait requires iOS 18, macOS 15, tvOS 18, watchOS 11, or
+> visionOS 2. If your deployment target is earlier than that, you can invoke
+> `prepareDependencies` from the body of the preview, instead:
+>
+> ```swift
+> #Preview {
+>   let _ = prepareDependencies {
+>     $0.defaultDatabase = try! appDatabase()
+>   }
+>   // ...
+> }
+> ```
+
+> Important: Due to a known issue in Xcode, macro-generated members, such as a `@Table`'s `Draft`
+> type or the properties of its `TableColumns` type, cannot be referenced from inside another
+> macro, including `#Preview`. If your preview uses such members, define it as a `PreviewProvider`
+> conformance instead, where you can prepare the database with `prepareDependencies`:
+>
+> ```swift
+> struct FeaturePreviews: PreviewProvider {
+>   static var previews: some View {
+>     let _ = try! prepareDependencies {
+>       $0.defaultDatabase = try appDatabase()
+>     }
+>     FeatureView(item: Item.Draft())
+>   }
+> }
+> ```
 
 And similarly, in tests, this can be done using the `.dependency` testing trait 
 from [DependenciesTestSupport](https://github.com/pointfreeco/swift-dependencies):
